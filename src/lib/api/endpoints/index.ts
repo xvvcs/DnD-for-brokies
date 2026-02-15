@@ -5,5 +5,10 @@
  * @module api/endpoints
  */
 
-// Placeholder for endpoint modules
-export {};
+export * from './documents';
+export * from './classes';
+export * from './species';
+export * from './backgrounds';
+export * from './spells';
+export * from './equipment';
+export * from './reference';
