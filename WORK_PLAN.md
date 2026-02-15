@@ -117,19 +117,19 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
 
 #### 1.1 Dexie.js Database Setup
 
-- [ ] **1.1.1** Create database schema (`src/lib/db/schema.ts`)
+- [x] **1.1.1** Create database schema (`src/lib/db/schema.ts`)
   - Define all table interfaces
   - Set up database versioning strategy
   - Configure indexes for efficient queries
   - Estimated: 2 hours
 
-- [ ] **1.1.2** Implement core database class (`src/lib/db/index.ts`)
+- [x] **1.1.2** Implement core database class (`src/lib/db/database.ts`)
   - Extend Dexie with custom database class
   - Define all tables (characters, campaigns, apiCache, settings)
   - Implement connection handling
   - Estimated: 2 hours
 
-- [ ] **1.1.3** Create database migration strategy
+- [x] **1.1.3** Create database migration strategy (`src/lib/db/migrations.ts`)
   - Implement version upgrade handlers
   - Add data migration utilities
   - Create backup/restore helpers

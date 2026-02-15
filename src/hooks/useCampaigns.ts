@@ -17,7 +17,7 @@ export function useCampaigns() {
           description: camp.description,
           characterCount: camp.characterIds.length,
           edition: camp.edition,
-          updatedAt: camp.updatedAt,
+          updatedAt: new Date(camp.updatedAt),
         })
       );
     },

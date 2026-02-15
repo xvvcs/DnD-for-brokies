@@ -19,7 +19,7 @@ export function useCharacters() {
           classes: char.classes.map((c) => `${c.name} ${c.level}`).join(', '),
           currentHp: char.combat.currentHp,
           maxHp: char.combat.maxHp,
-          updatedAt: char.updatedAt,
+          updatedAt: new Date(char.updatedAt),
         })
       );
     },
