@@ -11,18 +11,20 @@ This document provides a detailed implementation roadmap for the DnDnB (D&D Char
 ## Phase 0: Foundation & Setup (Week 1)
 
 ### Goal
+
 Establish the project foundation with proper tooling, dependencies, and project structure.
 
 ### Tasks
 
 #### 0.1 Project Initialization
-- [ ] **0.1.1** Initialize Next.js 15 project with App Router
+
+- [x] **0.1.1** Initialize Next.js 15 project with App Router
   - Use `create-next-app@latest` with TypeScript, Tailwind CSS
   - Configure `next.config.js` for static export (Vercel deployment)
   - Set up ESLint with strict rules and Prettier
   - Estimated: 2 hours
 
-- [ ] **0.1.2** Install core dependencies
+- [x] **0.1.2** Install core dependencies
   - `dexie` and `@types/dexie` for IndexedDB
   - `zustand` for state management
   - `@tanstack/react-query` for API data fetching
@@ -32,25 +34,26 @@ Establish the project foundation with proper tooling, dependencies, and project 
   - `date-fns` for date handling
   - Estimated: 1 hour
 
-- [ ] **0.1.3** Initialize shadcn/ui
+- [x] **0.1.3** Initialize shadcn/ui
   - Run `npx shadcn@latest init`
   - Configure component aliases and styling
   - Install base components: button, card, dialog, input, select, checkbox, tabs, accordion, scroll-area, tooltip, dropdown-menu
   - Estimated: 2 hours
 
-- [ ] **0.1.4** Set up project structure
+- [x] **0.1.4** Set up project structure
   - Create all directories as per REQUIREMENTS.md section 5.4
   - Set up TypeScript path aliases (`@/components`, `@/lib`, `@/types`, etc.)
   - Create placeholder files for key modules
   - Estimated: 1 hour
 
-- [ ] **0.1.5** Configure development environment
+- [x] **0.1.5** Configure development environment
   - Set up `.env.local` with API base URL
   - Configure VS Code settings and extensions recommendations
   - Set up Git hooks for linting
   - Estimated: 1 hour
 
 #### 0.2 Type Definitions
+
 - [ ] **0.2.1** Create Open5E API types (`src/types/open5e.ts`)
   - Define interfaces for all API entities (classes, species, spells, items, etc.)
   - Define API response types with pagination
@@ -78,6 +81,7 @@ Establish the project foundation with proper tooling, dependencies, and project 
   - Estimated: 1 hour
 
 #### 0.3 Global Styling & Theme Setup
+
 - [ ] **0.3.1** Set up fantasy theme CSS (`src/styles/fantasy-theme.css`)
   - Define CSS custom properties for colors (deep reds, golds, browns, parchment)
   - Set up typography (serif headers, sans-serif body)
@@ -105,11 +109,13 @@ Establish the project foundation with proper tooling, dependencies, and project 
 ## Phase 1: Data Layer & API Integration (Week 1-2)
 
 ### Goal
+
 Build the complete data persistence layer with Dexie.js and establish Open5E API integration with caching.
 
 ### Tasks
 
 #### 1.1 Dexie.js Database Setup
+
 - [ ] **1.1.1** Create database schema (`src/lib/db/schema.ts`)
   - Define all table interfaces
   - Set up database versioning strategy
@@ -129,6 +135,7 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
   - Estimated: 2 hours
 
 #### 1.2 Character Data Layer
+
 - [ ] **1.2.1** Implement character CRUD operations (`src/lib/db/characters.ts`)
   - `createCharacter(characterData)` - create new character
   - `getCharacter(id)` - fetch single character
@@ -151,6 +158,7 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
   - Estimated: 2 hours
 
 #### 1.3 Campaign Data Layer
+
 - [ ] **1.3.1** Implement campaign CRUD (`src/lib/db/campaigns.ts`)
   - `createCampaign(data)`
   - `getCampaign(id)`
@@ -166,6 +174,7 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
   - Estimated: 2 hours
 
 #### 1.4 API Cache Layer
+
 - [ ] **1.4.1** Create cache management utilities (`src/lib/db/cache.ts`)
   - `cacheApiData(key, data, documentKey, version)`
   - `getCachedApiData(key)` with TTL check
@@ -180,6 +189,7 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
   - Estimated: 2 hours
 
 #### 1.5 Open5E API Service
+
 - [ ] **1.5.1** Create API client (`src/lib/api/client.ts`)
   - Axios/fetch wrapper with base URL
   - Request throttling (5 concurrent, 100ms delay between batches)
@@ -234,6 +244,7 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
   - Estimated: 2 hours
 
 #### 1.6 React Query Integration
+
 - [ ] **1.6.1** Set up React Query provider
   - Configure default options
   - Set up query client with persistence
@@ -264,11 +275,13 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
 ## Phase 2: Game Logic Engine (Week 2-3)
 
 ### Goal
+
 Implement all D&D 5e game mechanics calculations: ability scores, proficiency, combat stats, spellcasting.
 
 ### Tasks
 
 #### 2.1 Ability Score Calculations (`src/lib/engine/ability-scores.ts`)
+
 - [ ] **2.1.1** Implement ability score to modifier conversion
   - Formula: `(score - 10) / 2` rounded down
   - Handle edge cases (scores below 1, above 30)
@@ -289,6 +302,7 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
   - Estimated: 2 hours
 
 #### 2.2 Proficiency System (`src/lib/engine/proficiency.ts`)
+
 - [ ] **2.2.1** Implement proficiency bonus calculation
   - Formula based on total level: `floor((level - 1) / 4) + 2`
   - Handle multiclass total levels
@@ -314,6 +328,7 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
   - Estimated: 1 hour
 
 #### 2.3 Combat Statistics (`src/lib/engine/combat.ts`)
+
 - [ ] **2.3.1** Calculate Armor Class
   - Base: 10 + DEX modifier (unarmored)
   - Light armor: base + DEX modifier
@@ -353,6 +368,7 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
   - Estimated: 3 hours
 
 #### 2.4 Spellcasting Engine (`src/lib/engine/spellcasting.ts`)
+
 - [ ] **2.4.1** Determine spellcasting ability per class
   - Map classes to their spellcasting ability
   - Support multiple spellcasting classes (multiclass)
@@ -382,6 +398,7 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
   - Estimated: 2 hours
 
 #### 2.5 HP Management (`src/lib/engine/hp.ts`)
+
 - [ ] **2.5.1** Implement damage application
   - Subtract from temp HP first
   - Remainder subtracts from current HP
@@ -415,6 +432,7 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
   - Estimated: 2 hours
 
 #### 2.6 Feature Management (`src/lib/engine/features.ts`)
+
 - [ ] **2.6.1** Aggregate all character features
   - Class features by level
   - Species traits
@@ -435,11 +453,13 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
 ## Phase 3: Character Sheet UI (Week 3-5)
 
 ### Goal
+
 Build the comprehensive character sheet interface with all sections from REQUIREMENTS.md.
 
 ### Tasks
 
 #### 3.1 Shared Character Sheet Components
+
 - [ ] **3.1.1** Create CharacterSheetLayout wrapper
   - Responsive grid layout (3-column desktop, 2-column tablet, 1-column mobile)
   - Fantasy-themed container with parchment background
@@ -460,6 +480,7 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
   - Estimated: 1 hour
 
 #### 3.2 Header / Identity Section (`src/components/character-sheet/IdentityBar.tsx`)
+
 - [ ] **3.2.1** Display character name (editable inline)
 - [ ] **3.2.2** Display class(es) + total level
 - [ ] **3.2.3** Display species and background
@@ -469,6 +490,7 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - Estimated: 3 hours
 
 #### 3.3 Ability Scores Panel (`src/components/character-sheet/AbilityScores.tsx`)
+
 - [ ] **3.3.1** Display 6 ability scores with modifiers
 - [ ] **3.3.2** Inline editing for ability scores
 - [ ] **3.3.3** Display saving throw modifiers
@@ -477,6 +499,7 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - Estimated: 3 hours
 
 #### 3.4 Skills Panel (`src/components/character-sheet/SkillsPanel.tsx`)
+
 - [ ] **3.4.1** List all 18 skills with associated ability
 - [ ] **3.4.2** Display calculated modifier for each skill
 - [ ] **3.4.3** Toggle proficiency/expertise
@@ -486,6 +509,7 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - Estimated: 3 hours
 
 #### 3.5 Combat Stats Section (`src/components/character-sheet/CombatStats.tsx`)
+
 - [ ] **3.5.1** Display AC with manual override option
 - [ ] **3.5.2** Display Initiative
 - [ ] **3.5.3** Display all speed types (walk, fly, etc.)
@@ -495,6 +519,7 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - Estimated: 3 hours
 
 #### 3.6 HP Tracker (`src/components/character-sheet/HPTracker.tsx`)
+
 - [ ] **3.6.1** Large HP display (current / max)
 - [ ] **3.6.2** Temp HP display
 - [ ] **3.6.3** Quick +/- buttons for common values (1, 5, 10)
@@ -505,6 +530,7 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - Estimated: 4 hours
 
 #### 3.7 Actions Panel (`src/components/character-sheet/ActionsPanel.tsx`)
+
 - [ ] **3.7.1** Actions tab: list attacks and class actions
 - [ ] **3.7.2** Bonus Actions tab
 - [ ] **3.7.3** Reactions tab
@@ -514,6 +540,7 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - Estimated: 4 hours
 
 #### 3.8 Spellcasting Panel (`src/components/character-sheet/SpellcastingPanel.tsx`)
+
 - [ ] **3.8.1** Display spellcasting ability, save DC, attack bonus
 - [ ] **3.8.2** Spell slot tracker per level (checkboxes)
 - [ ] **3.8.3** List spells by level with expand/collapse
@@ -526,6 +553,7 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - Estimated: 5 hours
 
 #### 3.9 Equipment & Inventory (`src/components/character-sheet/EquipmentPanel.tsx`)
+
 - [ ] **3.9.1** Equipped items section (weapon, armor, shield)
 - [ ] **3.9.2** Equip/unequip toggle
 - [ ] **3.9.3** Backpack/inventory list
@@ -537,6 +565,7 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - Estimated: 4 hours
 
 #### 3.10 Features & Traits (`src/components/character-sheet/FeaturesPanel.tsx`)
+
 - [ ] **3.10.1** Class features organized by level
 - [ ] **3.10.2** Species traits
 - [ ] **3.10.3** Background feature
@@ -547,6 +576,7 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - Estimated: 3 hours
 
 #### 3.11 Conditions Panel (`src/components/character-sheet/ConditionsPanel.tsx`)
+
 - [ ] **3.11.1** Toggle all standard conditions
 - [ ] **3.11.2** Exhaustion level selector (1-6 or 1-10)
 - [ ] **3.11.3** Visual indicator for active conditions
@@ -554,6 +584,7 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - Estimated: 2 hours
 
 #### 3.12 Notes & Backstory (`src/components/character-sheet/NotesPanel.tsx`)
+
 - [ ] **3.12.1** Personality Traits field
 - [ ] **3.12.2** Ideals field
 - [ ] **3.12.3** Bonds field
@@ -564,6 +595,7 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - Estimated: 2 hours
 
 #### 3.13 Character Sheet Integration
+
 - [ ] **3.13.1** Create main CharacterSheet page (`src/app/characters/[id]/page.tsx`)
   - Assemble all panel components
   - State management with Zustand
@@ -581,11 +613,13 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 ## Phase 4: Character Creation Wizard (Week 5-6)
 
 ### Goal
+
 Implement the 8-step character creation wizard following D&D Beyond's flow.
 
 ### Tasks
 
 #### 4.1 Wizard Framework
+
 - [ ] **4.1.1** Create wizard state management (`src/stores/characterCreationStore.ts`)
   - Track current step
   - Store selections for each step
@@ -607,6 +641,7 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
   - Estimated: 1 hour
 
 #### 4.2 Step 0: Configuration (`src/components/character-creation/StepConfig.tsx`)
+
 - [ ] **4.2.1** Document/rulebook selector
   - Multi-select from available documents
   - Group by game system (5e 2014, 5e 2024, A5E)
@@ -619,6 +654,7 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 - Estimated: 4 hours
 
 #### 4.3 Step 1: Choose Class (`src/components/character-creation/StepClass.tsx`)
+
 - [ ] **4.3.1** Class browser/cards
   - Filter by selected documents
   - Show class icon, name, hit die, primary abilities
@@ -631,6 +667,7 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 - Estimated: 4 hours
 
 #### 4.4 Step 2: Choose Background (`src/components/character-creation/StepBackground.tsx`)
+
 - [ ] **4.4.1** Background browser/cards
   - Filter by selected documents
   - Show granted proficiencies, skills, tools
@@ -640,6 +677,7 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 - Estimated: 3 hours
 
 #### 4.5 Step 3: Choose Species (`src/components/character-creation/StepSpecies.tsx`)
+
 - [ ] **4.5.1** Species browser/cards
   - Filter by selected documents
   - Show traits summary
@@ -650,6 +688,7 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 - Estimated: 3 hours
 
 #### 4.6 Step 4: Ability Scores (`src/components/character-creation/StepAbilityScores.tsx`)
+
 - [ ] **4.6.1** Method selector (Standard Array, Point Buy, Manual)
 - [ ] **4.6.2** Standard Array implementation
   - Display values [15, 14, 13, 12, 10, 8]
@@ -667,6 +706,7 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 - Estimated: 5 hours
 
 #### 4.7 Step 5: Equipment (`src/components/character-creation/StepEquipment.tsx`)
+
 - [ ] **4.7.1** Display class starting equipment options
   - Parse and present choices (e.g., "martial weapon OR two simple weapons")
 - [ ] **4.7.2** Selection interface for each equipment choice
@@ -678,6 +718,7 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 - Estimated: 4 hours
 
 #### 4.8 Step 6: Spells (`src/components/character-creation/StepSpells.tsx`)
+
 - [ ] **4.8.1** Display only if character has spellcasting
 - [ ] **4.8.2** Cantrip selection (number based on class)
 - [ ] **4.8.3** Spell selection based on class rules:
@@ -690,6 +731,7 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 - Estimated: 4 hours
 
 #### 4.9 Step 7: Description (`src/components/character-creation/StepDescription.tsx`)
+
 - [ ] **4.9.1** Character name input (required)
 - [ ] **4.9.2** Personality Traits text area
 - [ ] **4.9.3** Ideals text area
@@ -701,6 +743,7 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 - Estimated: 2 hours
 
 #### 4.10 Step 8: Review (`src/components/character-creation/StepReview.tsx`)
+
 - [ ] **4.10.1** Summary of all selections
   - Collapsible sections for each step
 - [ ] **4.10.2** Display calculated stats (HP, AC, etc.)
@@ -710,6 +753,7 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 - Estimated: 2 hours
 
 #### 4.11 Wizard Integration
+
 - [ ] **4.11.1** Create wizard page (`src/app/characters/new/page.tsx`)
 - [ ] **4.11.2** Integrate all steps with state management
 - [ ] **4.11.3** Step validation before navigation
@@ -724,11 +768,13 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 ## Phase 5: Character Management & Campaigns (Week 6-7)
 
 ### Goal
+
 Build the home page with character list and campaign management features.
 
 ### Tasks
 
 #### 5.1 Character List Page (`src/app/page.tsx`)
+
 - [ ] **5.1.1** Empty state when no characters
   - Welcome message
   - "Create First Character" CTA
@@ -753,6 +799,7 @@ Build the home page with character list and campaign management features.
   - Estimated: 2 hours
 
 #### 5.2 Campaign Management
+
 - [ ] **5.2.1** Campaign list page (`src/app/campaigns/page.tsx`)
   - List all campaigns with character count
   - Create new campaign button
@@ -777,6 +824,7 @@ Build the home page with character list and campaign management features.
   - Estimated: 1 hour
 
 #### 5.3 Level Up Flow
+
 - [ ] **5.3.1** Level up button on character sheet
 - [ ] **5.3.2** HP increase dialog (fixed or manual roll)
 - [ ] **5.3.3** Feature selection at new level
@@ -789,6 +837,7 @@ Build the home page with character list and campaign management features.
 - Estimated: 4 hours
 
 #### 5.4 Rest Mechanics
+
 - [ ] **5.4.1** Short Rest button
   - Hit dice spending UI
   - Feature refresh (Warlock slots, etc.)
@@ -810,11 +859,13 @@ Build the home page with character list and campaign management features.
 ## Phase 6: Polish, PDF Export & Deployment (Week 7-8)
 
 ### Goal
+
 Add PDF export, finalize styling, and deploy to Vercel.
 
 ### Tasks
 
 #### 6.1 PDF Export (`src/lib/pdf/`)
+
 - [ ] **6.1.1** Set up react-pdf
   - Install dependency
   - Configure fonts (include fantasy font)
@@ -839,6 +890,7 @@ Add PDF export, finalize styling, and deploy to Vercel.
   - Estimated: 1 hour
 
 #### 6.2 UI Polish & Theme Refinement
+
 - [ ] **6.2.1** Refine fantasy theme
   - Ensure consistent colors across all components
   - Add hover states and transitions
@@ -870,6 +922,7 @@ Add PDF export, finalize styling, and deploy to Vercel.
   - Estimated: 3 hours
 
 #### 6.3 Testing
+
 - [ ] **6.3.1** Set up testing framework
   - Vitest configuration
   - React Testing Library setup
@@ -896,6 +949,7 @@ Add PDF export, finalize styling, and deploy to Vercel.
   - Estimated: 4 hours
 
 #### 6.4 Performance Optimization
+
 - [ ] **6.4.1** Code splitting
   - Lazy load wizard steps
   - Lazy load PDF export
@@ -913,6 +967,7 @@ Add PDF export, finalize styling, and deploy to Vercel.
   - Estimated: 2 hours
 
 #### 6.5 Deployment
+
 - [ ] **6.5.1** Configure for Vercel
   - Update `next.config.js` for static export
   - Add `vercel.json` if needed
@@ -932,6 +987,7 @@ Add PDF export, finalize styling, and deploy to Vercel.
   - Estimated: 2 hours
 
 #### 6.6 Documentation
+
 - [ ] **6.6.1** Create README.md
   - Project description
   - Setup instructions
@@ -954,20 +1010,21 @@ Add PDF export, finalize styling, and deploy to Vercel.
 
 ### Timeline
 
-| Phase | Description | Duration | Effort |
-|-------|-------------|----------|--------|
-| Phase 0 | Foundation & Setup | Week 1 | 22 hours |
-| Phase 1 | Data Layer & API | Week 1-2 | 45 hours |
-| Phase 2 | Game Logic Engine | Week 2-3 | 40 hours |
-| Phase 3 | Character Sheet UI | Week 3-5 | 45 hours |
-| Phase 4 | Creation Wizard | Week 5-6 | 40 hours |
-| Phase 5 | Management & Campaigns | Week 6-7 | 25 hours |
-| Phase 6 | Polish & Deployment | Week 7-8 | 45 hours |
-| **Total** | | **8 weeks** | **~262 hours** |
+| Phase     | Description            | Duration    | Effort         |
+| --------- | ---------------------- | ----------- | -------------- |
+| Phase 0   | Foundation & Setup     | Week 1      | 22 hours       |
+| Phase 1   | Data Layer & API       | Week 1-2    | 45 hours       |
+| Phase 2   | Game Logic Engine      | Week 2-3    | 40 hours       |
+| Phase 3   | Character Sheet UI     | Week 3-5    | 45 hours       |
+| Phase 4   | Creation Wizard        | Week 5-6    | 40 hours       |
+| Phase 5   | Management & Campaigns | Week 6-7    | 25 hours       |
+| Phase 6   | Polish & Deployment    | Week 7-8    | 45 hours       |
+| **Total** |                        | **8 weeks** | **~262 hours** |
 
 ### Critical Path
 
 The critical path for MVP completion:
+
 1. **Foundation** (Phase 0) → Must complete first
 2. **Data Layer** (Phase 1) → Required for all features
 3. **Game Engine** (Phase 2) → Required for calculations
