@@ -54,13 +54,13 @@ Establish the project foundation with proper tooling, dependencies, and project 
 
 #### 0.2 Type Definitions
 
-- [ ] **0.2.1** Create Open5E API types (`src/types/open5e.ts`)
+- [x] **0.2.1** Create Open5E API types (`src/types/open5e.ts`)
   - Define interfaces for all API entities (classes, species, spells, items, etc.)
   - Define API response types with pagination
   - Define document/rulebook types
   - Estimated: 3 hours
 
-- [ ] **0.2.2** Create game mechanics types (`src/types/game.ts`)
+- [x] **0.2.2** Create game mechanics types (`src/types/game.ts`)
   - Ability scores, modifiers, proficiencies
   - Combat stats (AC, HP, initiative)
   - Skills and saving throws
@@ -69,33 +69,34 @@ Establish the project foundation with proper tooling, dependencies, and project 
   - Conditions
   - Estimated: 2 hours
 
-- [ ] **0.2.3** Create character types (`src/types/character.ts`)
+- [x] **0.2.3** Create character types (`src/types/character.ts`)
   - Main Character interface (comprehensive, matching REQUIREMENTS.md schema)
   - Character creation state types
   - Character update/change types
   - Estimated: 2 hours
 
-- [ ] **0.2.4** Create campaign types (`src/types/campaign.ts`)
+- [x] **0.2.4** Create campaign types (`src/types/campaign.ts`)
   - Campaign interface
   - Campaign-character relationship types
   - Estimated: 1 hour
 
 #### 0.3 Global Styling & Theme Setup
 
-- [ ] **0.3.1** Set up fantasy theme CSS (`src/styles/fantasy-theme.css`)
+- [x] **0.3.1** Set up fantasy theme CSS (`src/app/globals.css`)
   - Define CSS custom properties for colors (deep reds, golds, browns, parchment)
   - Set up typography (serif headers, sans-serif body)
   - Create decorative border styles
   - Add parchment texture backgrounds
+  - Note: Theme integrated into globals.css instead of separate file
   - Estimated: 3 hours
 
-- [ ] **0.3.2** Configure Tailwind with custom theme
+- [x] **0.3.2** Configure Tailwind with custom theme
   - Extend colors with fantasy palette
   - Add custom font families
   - Create utility classes for fantasy styling
   - Estimated: 2 hours
 
-- [ ] **0.3.3** Create layout components
+- [x] **0.3.3** Create layout components
   - Root layout with providers (React Query, Zustand)
   - Navigation/header component
   - Page wrapper with consistent padding

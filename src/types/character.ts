@@ -3,7 +3,7 @@
  * Main Character interface for application state and IndexedDB storage
  */
 
-import type { AbilityScore, Alignment, Edition, Size, SpellLevel } from './game';
+import type { AbilityScore, Alignment, Edition, SpellLevel } from './game';
 import type {
   ActiveCondition,
   Appearance,
@@ -12,8 +12,6 @@ import type {
   Currency,
   EquipmentItem,
   Personality,
-  Proficiency,
-  Skill,
   SpellSlot,
 } from './game';
 
