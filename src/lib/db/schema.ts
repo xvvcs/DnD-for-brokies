@@ -73,7 +73,7 @@ export interface SettingsEntry {
  */
 export const DB_CONFIG = {
   name: 'dndnb',
-  version: 1,
+  version: 2,
   tables: {
     characters: {
       name: 'characters',

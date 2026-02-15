@@ -26,12 +26,22 @@ class DnDnBDatabase extends Dexie {
   constructor() {
     super(DB_CONFIG.name);
 
-    // Define database schema with indexes for efficient queries
+    // Define database schema: primary key first, then indexes (Dexie uses first as primary key)
     this.version(DB_CONFIG.version).stores({
-      characters: DB_CONFIG.tables.characters.indexes.join(', '),
-      campaigns: DB_CONFIG.tables.campaigns.indexes.join(', '),
-      apiCache: DB_CONFIG.tables.apiCache.indexes.join(', '),
-      settings: DB_CONFIG.tables.settings.indexes.join(', '),
+      characters: [
+        DB_CONFIG.tables.characters.primaryKey,
+        ...DB_CONFIG.tables.characters.indexes,
+      ].join(', '),
+      campaigns: [
+        DB_CONFIG.tables.campaigns.primaryKey,
+        ...DB_CONFIG.tables.campaigns.indexes,
+      ].join(', '),
+      apiCache: [DB_CONFIG.tables.apiCache.primaryKey, ...DB_CONFIG.tables.apiCache.indexes].join(
+        ', '
+      ),
+      settings: [DB_CONFIG.tables.settings.primaryKey, ...DB_CONFIG.tables.settings.indexes].join(
+        ', '
+      ),
     });
   }
 
