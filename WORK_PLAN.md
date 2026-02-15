@@ -191,45 +191,45 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
 
 #### 1.5 Open5E API Service
 
-- [ ] **1.5.1** Create API client (`src/lib/api/client.ts`)
+- [x] **1.5.1** Create API client (`src/lib/api/client.ts`)
   - Axios/fetch wrapper with base URL
   - Request throttling (5 concurrent, 100ms delay between batches)
   - Error handling and retry logic
   - Response caching integration
   - Estimated: 3 hours
 
-- [ ] **1.5.2** Implement document/rulebook endpoints (`src/lib/api/endpoints/documents.ts`)
+- [x] **1.5.2** Implement document/rulebook endpoints (`src/lib/api/endpoints/documents.ts`)
   - `fetchDocuments()` - list all available documents
   - Cache documents globally (rarely change)
   - Document metadata extraction
   - Estimated: 1 hour
 
-- [ ] **1.5.3** Implement classes endpoint (`src/lib/api/endpoints/classes.ts`)
+- [x] **1.5.3** Implement classes endpoint (`src/lib/api/endpoints/classes.ts`)
   - `fetchClasses(documentKeys: string[])` - fetch for selected sources
   - Support pagination handling
   - Merge results from multiple documents
   - Cache per document key
   - Estimated: 2 hours
 
-- [ ] **1.5.4** Implement species endpoint (`src/lib/api/endpoints/species.ts`)
+- [x] **1.5.4** Implement species endpoint (`src/lib/api/endpoints/species.ts`)
   - `fetchSpecies(documentKeys: string[])`
   - Handle subspecies relationships
   - Cache per document
   - Estimated: 2 hours
 
-- [ ] **1.5.5** Implement backgrounds endpoint (`src/lib/api/endpoints/backgrounds.ts`)
+- [x] **1.5.5** Implement backgrounds endpoint (`src/lib/api/endpoints/backgrounds.ts`)
   - `fetchBackgrounds(documentKeys: string[])`
   - Cache per document
   - Estimated: 2 hours
 
-- [ ] **1.5.6** Implement spells endpoint (`src/lib/api/endpoints/spells.ts`)
+- [x] **1.5.6** Implement spells endpoint (`src/lib/api/endpoints/spells.ts`)
   - `fetchSpells(documentKeys: string[], filters?)`
   - Support level, school, class filtering
   - Handle large datasets with virtual scrolling preparation
   - Cache per document
   - Estimated: 2 hours
 
-- [ ] **1.5.7** Implement equipment endpoints (`src/lib/api/endpoints/equipment.ts`)
+- [x] **1.5.7** Implement equipment endpoints (`src/lib/api/endpoints/equipment.ts`)
   - `fetchWeapons(documentKeys: string[])`
   - `fetchArmor(documentKeys: string[])`
   - `fetchItems(documentKeys: string[])`
@@ -237,7 +237,7 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
   - Cache per document and type
   - Estimated: 3 hours
 
-- [ ] **1.5.8** Implement reference data endpoints
+- [x] **1.5.8** Implement reference data endpoints
   - `fetchConditions()` - cached globally
   - `fetchSkills()` - cached globally
   - `fetchLanguages()` - cached globally
@@ -246,12 +246,12 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
 
 #### 1.6 React Query Integration
 
-- [ ] **1.6.1** Set up React Query provider
+- [x] **1.6.1** Set up React Query provider
   - Configure default options
   - Set up query client with persistence
   - Estimated: 1 hour
 
-- [ ] **1.6.2** Create custom hooks for API data
+- [x] **1.6.2** Create custom hooks for API data
   - `useDocuments()` - fetch and cache documents list
   - `useClasses(documentKeys)` - fetch classes for selected sources
   - `useSpecies(documentKeys)`
@@ -263,7 +263,7 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
   - Each hook handles loading, error, and cached states
   - Estimated: 4 hours
 
-- [ ] **1.6.3** Create cache management UI hooks
+- [x] **1.6.3** Create cache management UI hooks
   - `useCacheStatus()` - show cache population progress
   - `useRefreshCache()` - manual cache refresh
   - `useClearCache()` - clear and re-fetch
