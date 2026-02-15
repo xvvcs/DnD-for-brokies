@@ -160,7 +160,7 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
 
 #### 1.3 Campaign Data Layer
 
-- [ ] **1.3.1** Implement campaign CRUD (`src/lib/db/campaigns.ts`)
+- [x] **1.3.1** Implement campaign CRUD (`src/lib/db/campaigns.ts`)
   - `createCampaign(data)`
   - `getCampaign(id)`
   - `getAllCampaigns()`
@@ -168,7 +168,7 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
   - `deleteCampaign(id)`
   - Estimated: 2 hours
 
-- [ ] **1.3.2** Implement character-campaign associations
+- [x] **1.3.2** Implement character-campaign associations
   - `assignCharacterToCampaign(characterId, campaignId)`
   - `removeCharacterFromCampaign(characterId, campaignId)`
   - `getCharactersByCampaign(campaignId)`
@@ -176,7 +176,7 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
 
 #### 1.4 API Cache Layer
 
-- [ ] **1.4.1** Create cache management utilities (`src/lib/db/cache.ts`)
+- [x] **1.4.1** Create cache management utilities (`src/lib/db/cache.ts`)
   - `cacheApiData(key, data, documentKey, version)`
   - `getCachedApiData(key)` with TTL check
   - `invalidateCache(key)`
@@ -184,7 +184,7 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
   - `getCacheStats()`
   - Estimated: 3 hours
 
-- [ ] **1.4.2** Implement cache warming strategy
+- [x] **1.4.2** Implement cache warming strategy
   - Batch fetch and cache on first document selection
   - Progress indicators for cache population
   - Estimated: 2 hours
