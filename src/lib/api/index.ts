@@ -5,5 +5,6 @@
  * @module api
  */
 
-export * from './client';
+export { Open5eClient, open5eClient } from './client';
+export type { FetchOptions, PaginatedFetchOptions, CachedFetchOptions } from './client';
 export * from './endpoints';
