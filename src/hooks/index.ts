@@ -15,3 +15,6 @@ export * from './useCampaigns';
 
 // API hooks
 export * from './useOpen5e';
+
+// Auto-save hooks
+export * from './useAutoSave';
