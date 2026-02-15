@@ -14,7 +14,17 @@
     "type-check": "tsc --noEmit",
     "test": "vitest run",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{css,json,md}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@react-pdf/renderer": "^4.3.2",
@@ -45,7 +55,9 @@
     "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "fake-indexeddb": "^6.2.5",
+    "husky": "^9.1.7",
     "jsdom": "^27.0.1",
+    "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
     "shadcn": "^3.8.4",
     "tailwindcss": "^4",
