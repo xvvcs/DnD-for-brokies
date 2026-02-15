@@ -137,7 +137,7 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
 
 #### 1.2 Character Data Layer
 
-- [ ] **1.2.1** Implement character CRUD operations (`src/lib/db/characters.ts`)
+- [x] **1.2.1** Implement character CRUD operations (`src/lib/db/characters.ts`)
   - `createCharacter(characterData)` - create new character
   - `getCharacter(id)` - fetch single character
   - `getAllCharacters()` - list all characters with sorting
@@ -146,13 +146,13 @@ Build the complete data persistence layer with Dexie.js and establish Open5E API
   - `duplicateCharacter(id)` - copy existing character
   - Estimated: 3 hours
 
-- [ ] **1.2.2** Add character search and filtering
+- [x] **1.2.2** Add character search and filtering
   - Search by name
   - Filter by campaign, class, level
   - Sort by name, level, last updated
   - Estimated: 2 hours
 
-- [ ] **1.2.3** Implement auto-save functionality
+- [x] **1.2.3** Implement auto-save functionality
   - Debounced save on character changes
   - Save state indicators (saving, saved, error)
   - Optimistic updates
