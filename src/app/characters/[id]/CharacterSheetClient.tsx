@@ -16,8 +16,10 @@ import {
 } from '@/components/character-sheet/CharacterSheetLayout';
 import { IdentityBar } from '@/components/character-sheet/IdentityBar';
 import { AbilityScores } from '@/components/character-sheet/AbilityScores';
+import { SkillsPanel } from '@/components/character-sheet/SkillsPanel';
 import { mockCharacter, mockSpellcaster } from '@/lib/debug/mockCharacters';
 import type { Character } from '@/types/character';
+import type { ProficiencyLevel } from '@/types/game';
 
 interface CharacterSheetClientProps {
   characterId: string;
@@ -45,6 +47,12 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
 
   // Calculate proficiency bonus based on level
   const proficiencyBonus = Math.floor((character.level - 1) / 4) + 2;
+
+  // Convert skills array to proficiency map
+  const skillProficiencies: Record<string, ProficiencyLevel> = {};
+  character.skills.forEach((skill) => {
+    skillProficiencies[skill.skillKey] = skill.proficiency as ProficiencyLevel;
+  });
 
   return (
     <CharacterSheetLayout>
@@ -114,19 +122,16 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
       <CharacterSheetGrid>
         {/* Left Column */}
         <div className="flex flex-col gap-4">
-          {/* Skills Panel Placeholder */}
-          <CharacterSheetSection title="Skills">
-            <div className="text-center py-8 text-gray-500">Skills panel coming soon...</div>
-          </CharacterSheetSection>
-
-          {/* Passive Perception */}
-          <CharacterSheetSection title="Passive Perception">
-            <div className="text-center py-4">
-              <div className="text-3xl font-bold text-amber-900">
-                {10 + (character.abilityScores.modifier.WIS || 0)}
-              </div>
-            </div>
-          </CharacterSheetSection>
+          {/* Skills Panel */}
+          <SkillsPanel
+            abilityModifiers={character.abilityScores.modifier}
+            skillProficiencies={skillProficiencies}
+            proficiencyBonus={proficiencyBonus}
+            onSkillProficiencyChange={(skillKey, level) => {
+              // TODO: Update skill proficiency
+              console.log(`Update ${skillKey} proficiency to ${level}`);
+            }}
+          />
         </div>
 
         {/* Middle Column */}
