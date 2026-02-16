@@ -3,7 +3,7 @@
  * Main Character interface for application state and IndexedDB storage
  */
 
-import type { AbilityScore, Alignment, Edition, SpellLevel } from './game';
+import type { AbilityScore, Alignment, Edition, SpellLevel, CharacterAction } from './game';
 import type {
   ActiveCondition,
   Appearance,
@@ -135,6 +135,9 @@ export interface Character {
 
   // Features & Traits
   features: CharacterFeature[];
+
+  // Actions (attacks and special actions)
+  actions: CharacterAction[];
 
   // Conditions
   conditions: ActiveCondition[];

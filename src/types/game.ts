@@ -185,6 +185,28 @@ export interface Attack {
   itemKey?: string;
 }
 
+// Actions, Bonus Actions, and Reactions
+export type ActionType = 'action' | 'bonus' | 'reaction';
+
+export interface CharacterAction {
+  id: string;
+  name: string;
+  type: ActionType;
+  description: string;
+  // If it's an attack
+  isAttack: boolean;
+  attackDetails?: Attack;
+  // For limited-use actions
+  uses?: {
+    max: number;
+    used: number;
+    resetOn: 'short' | 'long' | 'dawn' | 'turn' | 'other';
+  };
+  // Source: weapon, class feature, spell, custom
+  source: 'weapon' | 'feature' | 'spell' | 'custom';
+  sourceKey?: string; // Reference to the source item/feature
+}
+
 // Features and Traits
 export interface CharacterFeature {
   id: string;

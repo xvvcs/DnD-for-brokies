@@ -19,6 +19,7 @@ import { AbilityScores } from '@/components/character-sheet/AbilityScores';
 import { SkillsPanel } from '@/components/character-sheet/SkillsPanel';
 import { CombatStats } from '@/components/character-sheet/CombatStats';
 import { HPTracker } from '@/components/character-sheet/HPTracker';
+import { ActionsPanel } from '@/components/character-sheet/ActionsPanel';
 import { mockCharacter, mockSpellcaster } from '@/lib/debug/mockCharacters';
 import type { Character } from '@/types/character';
 import type { ProficiencyLevel } from '@/types/game';
@@ -162,6 +163,14 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
 
         {/* Right Column */}
         <div className="flex flex-col gap-4">
+          {/* Actions Panel */}
+          <ActionsPanel
+            actions={character.actions}
+            onAddAction={(action) => console.log('Add action:', action)}
+            onRemoveAction={(id) => console.log('Remove action:', id)}
+            onUseAction={(id) => console.log('Use action:', id)}
+          />
+
           {/* Features */}
           <CharacterSheetSection title="Features & Traits">
             <div className="space-y-2 max-h-64 overflow-y-auto">
