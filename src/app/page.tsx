@@ -111,6 +111,38 @@ export default function Home() {
             rules for your campaign.
           </p>
         </div>
+
+        {/* Debug Mode Section */}
+        <div className="py-12 border-t border-border">
+          <div className="bg-yellow-50 border-2 border-yellow-400 rounded-lg p-6">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-2xl">🔧</span>
+              <h2 className="font-[family-name:var(--font-cinzel)] text-xl font-bold text-yellow-800">
+                Developer Debug Mode
+              </h2>
+            </div>
+            <p className="text-yellow-700 mb-4">
+              Preview the character sheet with mock data. Click below to see what we have built so
+              far:
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button
+                asChild
+                variant="outline"
+                className="border-yellow-600 text-yellow-800 hover:bg-yellow-100"
+              >
+                <Link href="/characters/debug-fighter">View Fighter (Level 5)</Link>
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                className="border-yellow-600 text-yellow-800 hover:bg-yellow-100"
+              >
+                <Link href="/characters/debug-wizard">View Wizard (Level 5)</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
       </PageWrapper>
     </>
   );
