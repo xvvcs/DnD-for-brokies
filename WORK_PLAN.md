@@ -283,20 +283,20 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
 
 #### 2.1 Ability Score Calculations (`src/lib/engine/ability-scores.ts`)
 
-- [ ] **2.1.1** Implement ability score to modifier conversion
+- [x] **2.1.1** Implement ability score to modifier conversion
   - Formula: `(score - 10) / 2` rounded down
   - Handle edge cases (scores below 1, above 30)
   - Create lookup table for performance
   - Estimated: 1 hour
 
-- [ ] **2.1.2** Implement ability score generation methods
+- [x] **2.1.2** Implement ability score generation methods
   - Standard Array: `[15, 14, 13, 12, 10, 8]`
   - Point Buy: 27 points, costs table (8=0, 9=1, ..., 15=9), validate selections
   - Manual Entry: accept any valid array
   - Validation utilities
   - Estimated: 3 hours
 
-- [ ] **2.1.3** Calculate racial/species ability bonuses
+- [x] **2.1.3** Calculate racial/species ability bonuses
   - Apply bonuses from species traits
   - Handle floating bonuses (choose which ability)
   - Support 2024 rules (background gives bonuses instead)
@@ -304,25 +304,25 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
 
 #### 2.2 Proficiency System (`src/lib/engine/proficiency.ts`)
 
-- [ ] **2.2.1** Implement proficiency bonus calculation
+- [x] **2.2.1** Implement proficiency bonus calculation
   - Formula based on total level: `floor((level - 1) / 4) + 2`
   - Handle multiclass total levels
   - Estimated: 1 hour
 
-- [ ] **2.2.2** Calculate skill modifiers
+- [x] **2.2.2** Calculate skill modifiers
   - Base: ability modifier
   - Add proficiency bonus if proficient
   - Add proficiency bonus again if expertise
   - Support Jack of All Trades (half proficiency)
   - Estimated: 2 hours
 
-- [ ] **2.2.3** Calculate saving throw modifiers
+- [x] **2.2.3** Calculate saving throw modifiers
   - Base: ability modifier
   - Add proficiency bonus if proficient
   - Support class-based save proficiencies
   - Estimated: 1 hour
 
-- [ ] **2.2.4** Passive Perception calculation
+- [x] **2.2.4** Passive Perception calculation
   - Base: 10 + Wisdom modifier
   - Add proficiency if Perception is proficient
   - Support expertise
@@ -330,7 +330,7 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
 
 #### 2.3 Combat Statistics (`src/lib/engine/combat.ts`)
 
-- [ ] **2.3.1** Calculate Armor Class
+- [x] **2.3.1** Calculate Armor Class
   - Base: 10 + DEX modifier (unarmored)
   - Light armor: base + DEX modifier
   - Medium armor: base + DEX modifier (max 2)
@@ -340,7 +340,7 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
   - Support magical bonuses
   - Estimated: 3 hours
 
-- [ ] **2.3.2** Calculate Max HP
+- [x] **2.3.2** Calculate Max HP
   - First level: hit die max + CON modifier
   - Subsequent levels: hit die avg or roll + CON modifier
   - Support fixed vs manual roll options
@@ -349,18 +349,18 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
   - Support features that modify HP (Tough feat, Draconic Sorcerer)
   - Estimated: 3 hours
 
-- [ ] **2.3.3** Calculate initiative
+- [x] **2.3.3** Calculate initiative
   - Base: DEX modifier
   - Support features that add bonuses (Jack of All Trades, etc.)
   - Estimated: 1 hour
 
-- [ ] **2.3.4** Calculate speed
+- [x] **2.3.4** Calculate speed
   - Base from species
   - Apply modifiers (Encumbered, features, magic items)
   - Track different movement types (walk, fly, swim, climb, burrow)
   - Estimated: 1 hour
 
-- [ ] **2.3.5** Calculate attack bonuses and damage
+- [x] **2.3.5** Calculate attack bonuses and damage
   - Melee: STR modifier + proficiency (if proficient)
   - Ranged: DEX modifier + proficiency
   - Finesse weapons: use STR or DEX (whichever is higher)
@@ -370,21 +370,21 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
 
 #### 2.4 Spellcasting Engine (`src/lib/engine/spellcasting.ts`)
 
-- [ ] **2.4.1** Determine spellcasting ability per class
+- [x] **2.4.1** Determine spellcasting ability per class
   - Map classes to their spellcasting ability
   - Support multiple spellcasting classes (multiclass)
   - Estimated: 1 hour
 
-- [ ] **2.4.2** Calculate Spell Save DC
+- [x] **2.4.2** Calculate Spell Save DC
   - Formula: `8 + proficiency bonus + spellcasting ability modifier`
   - Support items/features that modify DC
   - Estimated: 1 hour
 
-- [ ] **2.4.3** Calculate Spell Attack Bonus
+- [x] **2.4.3** Calculate Spell Attack Bonus
   - Formula: `proficiency bonus + spellcasting ability modifier`
   - Estimated: 1 hour
 
-- [ ] **2.4.4** Calculate spell slots
+- [x] **2.4.4** Calculate spell slots
   - Full casters: standard slot progression
   - Half casters (Paladin, Ranger): half level rounded down
   - Third casters (Eldritch Knight, Arcane Trickster): third level rounded down
@@ -392,7 +392,7 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
   - Multiclass: combine using PHB multiclassing rules
   - Estimated: 4 hours
 
-- [ ] **2.4.5** Manage spell preparation/known
+- [x] **2.4.5** Manage spell preparation/known
   - Track prepared spells (Cleric, Druid, Wizard, Paladin)
   - Track known spells (Sorcerer, Bard, Ranger)
   - Calculate max prepared based on level + ability modifier
@@ -400,31 +400,31 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
 
 #### 2.5 HP Management (`src/lib/engine/hp.ts`)
 
-- [ ] **2.5.1** Implement damage application
+- [x] **2.5.1** Implement damage application
   - Subtract from temp HP first
   - Remainder subtracts from current HP
   - Floor at 0 HP
   - Trigger death save mode when HP reaches 0
   - Estimated: 2 hours
 
-- [ ] **2.5.2** Implement healing application
+- [x] **2.5.2** Implement healing application
   - Add to current HP
   - Cap at max HP
   - Reset death saves if healing brings HP above 0
   - Estimated: 1 hour
 
-- [ ] **2.5.3** Implement temporary HP
+- [x] **2.5.3** Implement temporary HP
   - Temp HP doesn't stack (take higher value)
   - Display separately from current HP
   - Estimated: 1 hour
 
-- [ ] **2.5.4** Hit dice management
+- [x] **2.5.4** Hit dice management
   - Track remaining hit dice per class
   - Calculate healing: hit die roll + CON modifier
   - Long rest: recover half of total hit dice (round up)
   - Estimated: 2 hours
 
-- [ ] **2.5.5** Death save mechanics
+- [x] **2.5.5** Death save mechanics
   - Track successes (0-3) and failures (0-3)
   - Roll logic (d20, 10+ = success, 9- = failure, 1 = 2 failures, 20 = revive)
   - Reset on long rest or healing
@@ -434,14 +434,14 @@ Implement all D&D 5e game mechanics calculations: ability scores, proficiency, c
 
 #### 2.6 Feature Management (`src/lib/engine/features.ts`)
 
-- [ ] **2.6.1** Aggregate all character features
+- [x] **2.6.1** Aggregate all character features
   - Class features by level
   - Species traits
   - Background feature
   - Feats
   - Estimated: 2 hours
 
-- [ ] **2.6.2** Track feature uses
+- [x] **2.6.2** Track feature uses
   - Support limited-use features (X/rest)
   - Track current uses vs maximum
   - Reset uses on rest
