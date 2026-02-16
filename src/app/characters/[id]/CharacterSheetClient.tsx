@@ -19,8 +19,7 @@ import { AbilityScores } from '@/components/character-sheet/AbilityScores';
 import { SkillsPanel } from '@/components/character-sheet/SkillsPanel';
 import { CombatStats } from '@/components/character-sheet/CombatStats';
 import { HPTracker } from '@/components/character-sheet/HPTracker';
-import { ActionsPanel } from '@/components/character-sheet/ActionsPanel';
-import { SpellcastingPanel } from '@/components/character-sheet/SpellcastingPanel';
+import { CombatActionsPanel } from '@/components/character-sheet/CombatActionsPanel';
 import { mockCharacter, mockSpellcaster } from '@/lib/debug/mockCharacters';
 import type { Character } from '@/types/character';
 import type { ProficiencyLevel, SpellLevel } from '@/types/game';
@@ -164,29 +163,23 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
 
         {/* Right Column */}
         <div className="flex flex-col gap-4">
-          {/* Actions Panel */}
-          <ActionsPanel
+          {/* Combat Actions Panel (unified Actions + Spellcasting) */}
+          <CombatActionsPanel
             actions={character.actions}
             onAddAction={(action) => console.log('Add action:', action)}
             onRemoveAction={(id) => console.log('Remove action:', id)}
             onUseAction={(id) => console.log('Use action:', id)}
+            spellcasting={character.spellcasting}
+            primaryClassKey={character.classes[0]?.key || ''}
+            onSpellSlotUse={(level: SpellLevel, isUsed: boolean) =>
+              console.log('Spell slot used:', level, isUsed)
+            }
+            onSpellTogglePrepared={(spellKey: string) =>
+              console.log('Toggle spell prepared:', spellKey)
+            }
+            onAddSpell={(spell) => console.log('Add spell:', spell)}
+            onRemoveSpell={(spellKey: string) => console.log('Remove spell:', spellKey)}
           />
-
-          {/* Spellcasting Panel */}
-          {character.spellcasting && (
-            <SpellcastingPanel
-              spellcasting={character.spellcasting}
-              primaryClassKey={character.classes[0]?.key || ''}
-              onSpellSlotUse={(level: SpellLevel, isUsed: boolean) =>
-                console.log('Spell slot used:', level, isUsed)
-              }
-              onSpellTogglePrepared={(spellKey: string) =>
-                console.log('Toggle spell prepared:', spellKey)
-              }
-              onAddSpell={(spell) => console.log('Add spell:', spell)}
-              onRemoveSpell={(spellKey: string) => console.log('Remove spell:', spellKey)}
-            />
-          )}
 
           {/* Features */}
           <CharacterSheetSection title="Features & Traits">
