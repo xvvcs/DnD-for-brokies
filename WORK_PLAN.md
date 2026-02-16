@@ -501,34 +501,34 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 
 #### 3.4 Skills Panel (`src/components/character-sheet/SkillsPanel.tsx`)
 
-- [ ] **3.4.1** List all 18 skills with associated ability
-- [ ] **3.4.2** Display calculated modifier for each skill
-- [ ] **3.4.3** Toggle proficiency/expertise
-- [ ] **3.4.4** Display Passive Perception
-- [ ] **3.4.5** Sort/filter skills (all, proficient only, by ability)
-- [ ] **3.4.6** Display skill descriptions from Open5E (tooltip or expandable)
-- [ ] **3.4.7** Responsive: accordion on mobile/tablet
+- [x] **3.4.1** List all 18 skills with associated ability
+- [x] **3.4.2** Display calculated modifier for each skill
+- [x] **3.4.3** Toggle proficiency/expertise
+- [x] **3.4.4** Display Passive Perception
+- [x] **3.4.5** Sort/filter skills (all, proficient only, by ability)
+- [x] **3.4.6** Display skill descriptions from Open5E (tooltip or expandable)
+- [x] **3.4.7** Responsive: accordion on mobile/tablet
 - Estimated: 3 hours
 
 #### 3.5 Combat Stats Section (`src/components/character-sheet/CombatStats.tsx`)
 
-- [ ] **3.5.1** Display AC with manual override option
-- [ ] **3.5.2** Display Initiative
-- [ ] **3.5.3** Display all speed types (walk, fly, etc.)
-- [ ] **3.5.4** Display hit dice (remaining/total per class)
-- [ ] **3.5.5** Death saves tracker (checkboxes)
-- [ ] **3.5.6** Visual indicators for active conditions
+- [x] **3.5.1** Display AC with manual override option
+- [x] **3.5.2** Display Initiative
+- [x] **3.5.3** Display all speed types (walk, fly, etc.)
+- [x] **3.5.4** Display hit dice (remaining/total per class)
+- [x] **3.5.5** Death saves tracker (checkboxes)
+- [x] **3.5.6** Visual indicators for active conditions
 - Estimated: 3 hours
 
 #### 3.6 HP Tracker (`src/components/character-sheet/HPTracker.tsx`)
 
-- [ ] **3.6.1** Large HP display (current / max)
-- [ ] **3.6.2** Temp HP display
-- [ ] **3.6.3** Quick +/- buttons for common values (1, 5, 10)
-- [ ] **3.6.4** Custom damage/heal input with submit
-- [ ] **3.6.5** Visual HP bar with color coding (green >50%, yellow 25-50%, red <25%)
-- [ ] **3.6.6** Death save mode UI (when HP is 0)
-- [ ] **3.6.7** Recent HP changes log (last 5 changes)
+- [x] **3.6.1** Large HP display (current / max)
+- [x] **3.6.2** Temp HP display
+- [x] **3.6.3** Quick +/- buttons for common values (1, 5, 10)
+- [x] **3.6.4** Custom damage/heal input with submit
+- [x] **3.6.5** Visual HP bar with color coding (green >50%, yellow 25-50%, red <25%)
+- [x] **3.6.6** Death save mode UI (when HP is 0)
+- [x] **3.6.7** Recent HP changes log (last 5 changes)
 - Estimated: 4 hours
 
 #### 3.7 Actions Panel (`src/components/character-sheet/ActionsPanel.tsx`)
