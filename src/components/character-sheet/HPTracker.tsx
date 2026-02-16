@@ -225,57 +225,23 @@ export function HPTracker({
         </div>
       </div>
 
-      {/* Quick Damage/Heal Buttons */}
-      <div className="grid grid-cols-6 gap-2 mb-4">
+      {/* Quick +1/-1 Buttons */}
+      <div className="flex gap-2 mb-4">
         <Button
           variant="outline"
           size="sm"
           onClick={() => applyDamage(1)}
-          className="bg-red-50 hover:bg-red-100 text-red-700 border-red-300"
+          className="flex-1 bg-red-50 hover:bg-red-100 text-red-700 border-red-300"
         >
-          <Minus className="w-3 h-3 mr-1" />1
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => applyDamage(5)}
-          className="bg-red-50 hover:bg-red-100 text-red-700 border-red-300"
-        >
-          <Minus className="w-3 h-3 mr-1" />5
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => applyDamage(10)}
-          className="bg-red-50 hover:bg-red-100 text-red-700 border-red-300"
-        >
-          <Minus className="w-3 h-3 mr-1" />
-          10
+          <Minus className="w-4 h-4 mr-1" />1
         </Button>
         <Button
           variant="outline"
           size="sm"
           onClick={() => applyHealing(1)}
-          className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300"
+          className="flex-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300"
         >
-          <Plus className="w-3 h-3 mr-1" />1
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => applyHealing(5)}
-          className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300"
-        >
-          <Plus className="w-3 h-3 mr-1" />5
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => applyHealing(10)}
-          className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-300"
-        >
-          <Plus className="w-3 h-3 mr-1" />
-          10
+          <Plus className="w-4 h-4 mr-1" />1
         </Button>
       </div>
 
