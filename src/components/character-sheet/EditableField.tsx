@@ -138,6 +138,7 @@ export function EditableField({
           'group cursor-pointer rounded px-2 py-1',
           'hover:bg-amber-100 transition-colors',
           'border border-transparent hover:border-amber-300',
+          'flex items-center',
           className
         )}
         onClick={handleStartEdit}
@@ -149,9 +150,13 @@ export function EditableField({
           }
         }}
       >
-        {label && <span className="text-xs text-gray-500 block">{label}</span>}
-        <span className="font-medium">{value || placeholder || '\u00A0'}</span>
-        <span className="ml-2 opacity-0 group-hover:opacity-50 text-xs text-gray-400">✎</span>
+        <div className="flex-1">
+          {label && <span className="text-xs text-gray-500 block">{label}</span>}
+          <span className="font-medium">{value || placeholder || '\u00A0'}</span>
+        </div>
+        <span className="ml-2 opacity-0 group-hover:opacity-50 text-xs text-gray-400 flex-shrink-0">
+          ✎
+        </span>
       </div>
     );
   }
@@ -173,7 +178,20 @@ export function EditableField({
         min={min}
         max={max}
         placeholder={placeholder}
-        className={cn('h-auto py-1 px-2', !isValid && 'border-red-500 focus-visible:ring-red-500')}
+        className={cn(
+          'h-auto py-1 px-2 text-center',
+          // Hide number input spinners completely
+          'appearance-textfield',
+          '[&::-webkit-outer-spin-button]:appearance-none',
+          '[&::-webkit-inner-spin-button]:appearance-none',
+          '[&::-webkit-inner-spin-button]:m-0',
+          '[&::-webkit-outer-spin-button]:m-0',
+          'focus-visible:ring-2 focus-visible:ring-amber-500',
+          !isValid && 'border-red-500 focus-visible:ring-red-500'
+        )}
+        style={{
+          MozAppearance: 'textfield',
+        }}
       />
       {!isValid && (
         <span className="text-xs text-red-500 absolute -bottom-5 left-0">Invalid value</span>
