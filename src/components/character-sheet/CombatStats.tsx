@@ -14,6 +14,8 @@
  * combat or roleplay as they significantly impact gameplay mechanics.
  */
 
+'use client';
+
 import React, { useState } from 'react';
 
 import { cn } from '@/lib/utils';

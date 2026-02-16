@@ -5,6 +5,8 @@
  * modifiers, and Passive Perception. Includes filtering and responsive design.
  */
 
+'use client';
+
 import React, { useState, useMemo } from 'react';
 
 import { cn } from '@/lib/utils';

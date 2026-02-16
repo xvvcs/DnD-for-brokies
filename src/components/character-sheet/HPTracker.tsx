@@ -11,6 +11,8 @@
  * - Recent HP changes log (last 5 changes)
  */
 
+'use client';
+
 import React, { useState } from 'react';
 
 import { cn } from '@/lib/utils';

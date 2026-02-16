@@ -5,6 +5,8 @@
  * Scores are displayed left-to-right in a single row with click-to-edit functionality.
  */
 
+'use client';
+
 import React, { useState } from 'react';
 
 import { cn } from '@/lib/utils';
