@@ -18,6 +18,7 @@ import { IdentityBar } from '@/components/character-sheet/IdentityBar';
 import { AbilityScores } from '@/components/character-sheet/AbilityScores';
 import { SkillsPanel } from '@/components/character-sheet/SkillsPanel';
 import { CombatStats } from '@/components/character-sheet/CombatStats';
+import { HPTracker } from '@/components/character-sheet/HPTracker';
 import { mockCharacter, mockSpellcaster } from '@/lib/debug/mockCharacters';
 import type { Character } from '@/types/character';
 import type { ProficiencyLevel } from '@/types/game';
@@ -148,68 +149,15 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
           />
 
           {/* HP Tracker */}
-          <CharacterSheetSection
-            title="Hit Points"
-            action={
-              <span className="text-amber-100 text-sm">
-                {character.combat.currentHp + character.combat.tempHp} / {character.combat.maxHp}
-              </span>
-            }
-          >
-            <div className="space-y-4">
-              {/* HP Bar */}
-              <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden">
-                <div
-                  className="absolute h-full bg-emerald-500 transition-all"
-                  style={{
-                    width: `${(character.combat.currentHp / character.combat.maxHp) * 100}%`,
-                  }}
-                />
-                {character.combat.tempHp > 0 && (
-                  <div
-                    className="absolute h-full bg-blue-400 transition-all"
-                    style={{
-                      left: `${(character.combat.currentHp / character.combat.maxHp) * 100}%`,
-                      width: `${(character.combat.tempHp / character.combat.maxHp) * 100}%`,
-                    }}
-                  />
-                )}
-                <div className="absolute inset-0 flex items-center justify-center font-bold text-gray-800">
-                  {character.combat.currentHp} / {character.combat.maxHp} HP
-                </div>
-              </div>
-
-              {/* Temp HP */}
-              {character.combat.tempHp > 0 && (
-                <div className="flex justify-between items-center text-blue-600">
-                  <span>Temp HP:</span>
-                  <span className="font-bold">+{character.combat.tempHp}</span>
-                </div>
-              )}
-
-              {/* Quick Actions */}
-              <div className="grid grid-cols-3 gap-2">
-                <button className="px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 font-medium text-sm">
-                  -1 HP
-                </button>
-                <button className="px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 font-medium text-sm">
-                  -5 HP
-                </button>
-                <button className="px-3 py-2 bg-red-100 text-red-700 rounded hover:bg-red-200 font-medium text-sm">
-                  -10 HP
-                </button>
-                <button className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 font-medium text-sm">
-                  +1 HP
-                </button>
-                <button className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 font-medium text-sm">
-                  +5 HP
-                </button>
-                <button className="px-3 py-2 bg-emerald-100 text-emerald-700 rounded hover:bg-emerald-200 font-medium text-sm">
-                  +10 HP
-                </button>
-              </div>
-            </div>
-          </CharacterSheetSection>
+          <HPTracker
+            currentHp={character.combat.currentHp}
+            maxHp={character.combat.maxHp}
+            tempHp={character.combat.tempHp}
+            onHpChange={(current, temp) => console.log('HP changed:', current, temp)}
+            onDamage={(amount) => console.log('Damage taken:', amount)}
+            onHeal={(amount) => console.log('Healed:', amount)}
+            onTempHpChange={(amount) => console.log('Temp HP changed:', amount)}
+          />
         </div>
 
         {/* Right Column */}
