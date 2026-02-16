@@ -254,7 +254,7 @@ export function SkillsPanel({
     <div
       className={cn('bg-gradient-to-b from-amber-50 to-white rounded-lg shadow-lg p-4', className)}
     >
-      {/* Header */}
+      {/* Header with Passive Perception */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-3">
           <h3 className="text-lg font-bold text-amber-900 uppercase tracking-wide">Skills</h3>
@@ -265,25 +265,23 @@ export function SkillsPanel({
           )}
         </div>
 
-        {/* Collapse Toggle */}
-        <button
-          type="button"
-          onClick={() => setIsCollapsed(!isCollapsed)}
-          className="lg:hidden p-2 rounded hover:bg-amber-100 transition-colors"
-          title={isCollapsed ? 'Expand skills' : 'Collapse skills'}
-        >
-          {isCollapsed ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
-        </button>
-      </div>
-
-      {/* Passive Perception */}
-      <div className="mb-4 p-3 bg-gradient-to-r from-blue-100 to-blue-50 border border-blue-300 rounded-lg">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Eye className="w-5 h-5 text-blue-700" />
-            <span className="font-medium text-sm text-blue-900">Passive Perception</span>
+        <div className="flex items-center gap-3">
+          {/* Passive Perception - minimal display */}
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-md">
+            <Eye className="w-4 h-4 text-blue-600" />
+            <span className="text-xs font-medium text-blue-700">Passive Perception:</span>
+            <span className="text-sm font-bold text-blue-800">{passivePerception}</span>
           </div>
-          <span className="text-2xl font-bold text-blue-700">{passivePerception}</span>
+
+          {/* Collapse Toggle */}
+          <button
+            type="button"
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="lg:hidden p-2 rounded hover:bg-amber-100 transition-colors"
+            title={isCollapsed ? 'Expand skills' : 'Collapse skills'}
+          >
+            {isCollapsed ? <ChevronDown className="w-5 h-5" /> : <ChevronUp className="w-5 h-5" />}
+          </button>
         </div>
       </div>
 
