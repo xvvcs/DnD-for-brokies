@@ -211,9 +211,9 @@ export function AbilityScores({
         className
       )}
     >
-      <div className="flex flex-col xl:flex-row gap-4">
+      <div className="flex flex-col gap-4">
         {/* Ability Scores Row - All 6 in one line */}
-        <div className="flex-1">
+        <div>
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-amber-100 text-xs font-bold uppercase tracking-wider">
               Ability Scores
@@ -265,12 +265,12 @@ export function AbilityScores({
 
         {/* Saving Throws - Collapsible */}
         {showSaves && (
-          <div className="xl:w-64 shrink-0 animate-in slide-in-from-top-2 duration-200">
+          <div className="animate-in slide-in-from-top-2 duration-200">
             <h4 className="text-amber-100 text-xs font-bold uppercase tracking-wider mb-2">
               Saving Throws
               <span className="text-[10px] font-normal text-amber-400 ml-2">(Click to toggle)</span>
             </h4>
-            <div className="grid grid-cols-3 xl:grid-cols-2 gap-1.5">
+            <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5">
               {ABILITY_SCORES.map((ability) => (
                 <SavingThrowItem
                   key={`save-${ability}`}
