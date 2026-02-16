@@ -57,16 +57,16 @@ function SpellSlotTracker({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-1.5">
       {validSlots.map((slot) => {
         const remaining = slot.max - slot.used;
         const slots = Array.from({ length: slot.max }, (_, i) => i);
 
         return (
-          <div key={slot.level} className="flex items-center gap-3">
-            <div className="w-16 text-sm font-bold text-purple-900">Level {slot.level}</div>
+          <div key={slot.level} className="flex items-center gap-2">
+            <div className="w-10 text-xs font-bold text-purple-900">Lv{slot.level}</div>
 
-            <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1 flex-wrap">
               {slots.map((index) => {
                 const isUsed = index < slot.used;
                 return (
@@ -75,19 +75,19 @@ function SpellSlotTracker({
                     type="button"
                     onClick={() => onToggle?.(slot.level, index, !isUsed)}
                     className={cn(
-                      'w-6 h-6 border-2 rounded flex items-center justify-center transition-colors',
+                      'w-5 h-5 border rounded flex items-center justify-center transition-colors',
                       isUsed
                         ? 'bg-purple-700 border-purple-700'
                         : 'bg-white border-purple-300 hover:border-purple-500'
                     )}
                     aria-label={`Spell slot ${index + 1} of level ${slot.level}${isUsed ? ' (used)' : ' (available)'}`}
                   >
-                    {isUsed && <Check className="w-4 h-4 text-white" />}
+                    {isUsed && <Check className="w-3 h-3 text-white" />}
                   </button>
                 );
               })}
 
-              <span className="ml-2 text-sm font-medium text-purple-700">
+              <span className="ml-1 text-xs font-medium text-purple-700">
                 {remaining}/{slot.max}
               </span>
             </div>
@@ -120,40 +120,40 @@ function SpellCard({
   const showPreparedToggle = canTogglePrepared && !isCantrip;
 
   return (
-    <div className="border-2 border-purple-300 rounded-lg p-3 bg-gradient-to-b from-purple-50 to-white">
+    <div className="border border-purple-300 rounded p-2 bg-gradient-to-b from-purple-50 to-white">
       <div className="flex items-start justify-between gap-2">
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h4 className="font-bold text-purple-900">{spell.name}</h4>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <h4 className="font-semibold text-sm text-purple-900">{spell.name}</h4>
 
             {!isCantrip && (
-              <span className="px-2 py-0.5 bg-purple-100 text-purple-700 text-xs font-medium rounded">
-                Level {spell.level}
+              <span className="px-1.5 py-0.5 bg-purple-100 text-purple-700 text-[10px] font-medium rounded">
+                Lv{spell.level}
               </span>
             )}
 
             {isCantrip && (
-              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded">
+              <span className="px-1.5 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-medium rounded">
                 Cantrip
               </span>
             )}
 
-            <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-xs font-medium rounded">
+            <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-medium rounded">
               {spell.school}
             </span>
           </div>
 
           {showPreparedToggle && (
-            <div className="mt-1 flex items-center gap-2">
+            <div className="mt-1 flex items-center gap-1.5">
               <Checkbox
                 id={`prepared-${spell.id}`}
                 checked={isPrepared}
                 onCheckedChange={() => onTogglePrepared?.(spell.spellKey)}
-                className="border-purple-400"
+                className="border-purple-400 h-3 w-3"
               />
               <label
                 htmlFor={`prepared-${spell.id}`}
-                className="text-sm font-medium text-purple-700 cursor-pointer"
+                className="text-xs text-purple-700 cursor-pointer"
               >
                 {isPrepared ? 'Prepared' : 'Not Prepared'}
               </label>
@@ -161,12 +161,12 @@ function SpellCard({
           )}
         </div>
 
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <Button
             variant="ghost"
             size="sm"
             onClick={() => onRemove?.(spell.spellKey)}
-            className="text-red-600 hover:text-red-700 hover:bg-red-50 px-2 h-7"
+            className="text-red-600 hover:text-red-700 hover:bg-red-50 px-1 h-6"
           >
             <Trash2 className="w-3 h-3" />
           </Button>
@@ -176,16 +176,16 @@ function SpellCard({
             className="p-1 hover:bg-purple-100 rounded transition-colors"
           >
             {expanded ? (
-              <ChevronUp className="w-4 h-4 text-purple-700" />
+              <ChevronUp className="w-3 h-3 text-purple-700" />
             ) : (
-              <ChevronDown className="w-4 h-4 text-purple-700" />
+              <ChevronDown className="w-3 h-3 text-purple-700" />
             )}
           </button>
         </div>
       </div>
 
       {expanded && (
-        <div className="mt-3 pt-3 border-t border-purple-200 text-sm space-y-2 animate-in slide-in-from-top-2 duration-200">
+        <div className="mt-2 pt-2 border-t border-purple-200 text-xs space-y-1">
           <p className="text-gray-700">
             <span className="font-medium text-purple-800">School:</span> {spell.school}
           </p>
@@ -193,7 +193,7 @@ function SpellCard({
             <span className="font-medium text-purple-800">Level:</span>{' '}
             {isCantrip ? 'Cantrip' : `Level ${spell.level}`}
           </p>
-          <p className="text-gray-500 italic text-xs">
+          <p className="text-gray-500 italic text-[10px]">
             Full spell details would be loaded from Open5E API
           </p>
         </div>
@@ -224,33 +224,33 @@ function SpellLevelSection({
   const preparedCount = spells.filter((s) => s.prepared).length;
 
   return (
-    <div className="border-2 border-purple-300 rounded-lg overflow-hidden">
+    <div className="border border-purple-300 rounded overflow-hidden">
       <button
         type="button"
         onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-purple-100 to-purple-50 hover:from-purple-200 hover:to-purple-100 transition-colors"
+        className="w-full flex items-center justify-between p-2 bg-gradient-to-r from-purple-100 to-purple-50 hover:from-purple-200 hover:to-purple-100 transition-colors"
       >
-        <div className="flex items-center gap-2">
-          <Sparkles className="w-5 h-5 text-purple-700" />
-          <h4 className="font-bold text-purple-900 uppercase text-sm">{levelName}</h4>
-          <span className="px-2 py-0.5 bg-purple-200 text-purple-800 text-xs font-medium rounded">
+        <div className="flex items-center gap-1.5">
+          <Sparkles className="w-3.5 h-3.5 text-purple-700" />
+          <h4 className="font-bold text-purple-900 text-xs">{levelName}</h4>
+          <span className="px-1.5 py-0.5 bg-purple-200 text-purple-800 text-[10px] font-medium rounded">
             {spells.length}
           </span>
           {canTogglePrepared && level > 0 && (
-            <span className="px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
-              {preparedCount} prepared
+            <span className="px-1.5 py-0.5 bg-green-100 text-green-700 text-[10px] font-medium rounded">
+              {preparedCount} prep
             </span>
           )}
         </div>
         {expanded ? (
-          <ChevronUp className="w-5 h-5 text-purple-700" />
+          <ChevronUp className="w-3.5 h-3.5 text-purple-700" />
         ) : (
-          <ChevronDown className="w-5 h-5 text-purple-700" />
+          <ChevronDown className="w-3.5 h-3.5 text-purple-700" />
         )}
       </button>
 
       {expanded && (
-        <div className="p-3 space-y-2 animate-in slide-in-from-top-2 duration-200">
+        <div className="p-2 space-y-1.5">
           {spells.map((spell) => (
             <SpellCard
               key={spell.id}
@@ -361,26 +361,26 @@ export function SpellcastingSection({
   const hasSlots = spellcasting.slots.some((s) => s.max > 0 && s.level > 0);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       {/* Spellcasting Stats */}
-      <div className="grid grid-cols-3 gap-3 p-3 bg-gradient-to-br from-purple-50 to-purple-100 border-2 border-purple-300 rounded-lg">
+      <div className="grid grid-cols-3 gap-2 p-2 bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-300 rounded">
         <div className="text-center">
-          <div className="text-xs text-purple-700 font-medium uppercase tracking-wider mb-1">
+          <div className="text-[10px] text-purple-700 font-medium uppercase tracking-wider">
             Ability
           </div>
-          <div className="text-2xl font-bold text-purple-900">{spellcasting.ability || 'N/A'}</div>
+          <div className="text-lg font-bold text-purple-900">{spellcasting.ability || 'N/A'}</div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-purple-700 font-medium uppercase tracking-wider mb-1">
+          <div className="text-[10px] text-purple-700 font-medium uppercase tracking-wider">
             Save DC
           </div>
-          <div className="text-2xl font-bold text-purple-900">{spellcasting.saveDC}</div>
+          <div className="text-lg font-bold text-purple-900">{spellcasting.saveDC}</div>
         </div>
         <div className="text-center">
-          <div className="text-xs text-purple-700 font-medium uppercase tracking-wider mb-1">
+          <div className="text-[10px] text-purple-700 font-medium uppercase tracking-wider">
             Attack
           </div>
-          <div className="text-2xl font-bold text-purple-900">
+          <div className="text-lg font-bold text-purple-900">
             {formatModifier(spellcasting.attackBonus)}
           </div>
         </div>
@@ -388,10 +388,10 @@ export function SpellcastingSection({
 
       {/* Spell Slots */}
       {hasSlots && (
-        <div className="p-4 bg-white border-2 border-purple-300 rounded-lg">
-          <div className="flex items-center gap-2 mb-3">
-            <Star className="w-4 h-4 text-purple-700" />
-            <h4 className="font-bold text-purple-900 uppercase text-sm">Spell Slots</h4>
+        <div className="p-2 bg-white border border-purple-300 rounded">
+          <div className="flex items-center gap-1.5 mb-2">
+            <Star className="w-3 h-3 text-purple-700" />
+            <h4 className="font-bold text-purple-900 text-xs">Spell Slots</h4>
           </div>
           <SpellSlotTracker slots={spellcasting.slots} onToggle={handleSlotToggle} />
         </div>
@@ -399,33 +399,28 @@ export function SpellcastingSection({
 
       {/* Info Banners */}
       {usesPreparation && (
-        <div className="p-3 bg-green-50 border border-green-300 rounded-lg text-sm text-green-800">
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4" />
-            <span className="font-medium">
-              You can prepare spells after a long rest. Toggle checkboxes to mark prepared.
-            </span>
+        <div className="p-2 bg-green-50 border border-green-300 rounded text-xs text-green-800">
+          <div className="flex items-center gap-1.5">
+            <BookOpen className="w-3 h-3" />
+            <span>Prepare spells after long rest</span>
           </div>
         </div>
       )}
 
       {usesKnownSpells && !usesPreparation && (
-        <div className="p-3 bg-blue-50 border border-blue-300 rounded-lg text-sm text-blue-800">
-          <div className="flex items-center gap-2">
-            <BookOpen className="w-4 h-4" />
-            <span className="font-medium">
-              You have a fixed set of known spells. They are always available to cast.
-            </span>
+        <div className="p-2 bg-blue-50 border border-blue-300 rounded text-xs text-blue-800">
+          <div className="flex items-center gap-1.5">
+            <BookOpen className="w-3 h-3" />
+            <span>Known spells always available</span>
           </div>
         </div>
       )}
 
       {/* Spell List */}
-      <div className="space-y-3 max-h-[400px] overflow-y-auto">
+      <div className="space-y-1.5 max-h-[400px] overflow-y-auto">
         {levels.length === 0 && !showAddSpell && (
-          <div className="text-center py-8 text-gray-500">
-            <p className="text-sm">No spells known</p>
-            <p className="text-xs mt-1">Add spells to your spell list</p>
+          <div className="text-center py-6 text-gray-500">
+            <p className="text-xs">No spells known</p>
           </div>
         )}
 
@@ -452,9 +447,9 @@ export function SpellcastingSection({
           variant="outline"
           size="sm"
           onClick={() => setShowAddSpell(true)}
-          className="w-full border-dashed border-2 border-purple-300 text-purple-700 hover:bg-purple-50"
+          className="w-full border-dashed border-2 border-purple-300 text-purple-700 hover:bg-purple-50 h-7 text-xs"
         >
-          <Plus className="w-4 h-4 mr-1" />
+          <Plus className="w-3 h-3 mr-1" />
           Add Spell
         </Button>
       )}
