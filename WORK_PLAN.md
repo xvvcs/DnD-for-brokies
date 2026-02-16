@@ -461,20 +461,20 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 
 #### 3.1 Shared Character Sheet Components
 
-- [ ] **3.1.1** Create CharacterSheetLayout wrapper
+- [x] **3.1.1** Create CharacterSheetLayout wrapper
   - Responsive grid layout (3-column desktop, 2-column tablet, 1-column mobile)
   - Fantasy-themed container with parchment background
   - Print-friendly styles (hide buttons, adjust layout)
   - Estimated: 2 hours
 
-- [ ] **3.1.2** Create EditableField component
+- [x] **3.1.2** Create EditableField component
   - Click to edit inline
   - Support text, number, select input types
   - Validation and error states
   - Auto-save integration
   - Estimated: 2 hours
 
-- [ ] **3.1.3** Create ProficiencyBadge component
+- [x] **3.1.3** Create ProficiencyBadge component
   - Show proficiency level (none, proficient, expertise)
   - Toggle between states
   - Visual indicators (icons, colors)
@@ -482,12 +482,12 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 
 #### 3.2 Header / Identity Section (`src/components/character-sheet/IdentityBar.tsx`)
 
-- [ ] **3.2.1** Display character name (editable inline)
-- [ ] **3.2.2** Display class(es) + total level
-- [ ] **3.2.3** Display species and background
-- [ ] **3.2.4** Display proficiency bonus
-- [ ] **3.2.5** Display XP or milestone toggle
-- [ ] **3.2.6** Character portrait placeholder/image upload
+- [x] **3.2.1** Display character name (editable inline)
+- [x] **3.2.2** Display class(es) + total level
+- [x] **3.2.3** Display species and background
+- [x] **3.2.4** Display proficiency bonus
+- [x] **3.2.5** Display XP or milestone toggle
+- [x] **3.2.6** Character portrait placeholder/image upload
 - Estimated: 3 hours
 
 #### 3.3 Ability Scores Panel (`src/components/character-sheet/AbilityScores.tsx`)
@@ -506,7 +506,8 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - [ ] **3.4.3** Toggle proficiency/expertise
 - [ ] **3.4.4** Display Passive Perception
 - [ ] **3.4.5** Sort/filter skills (all, proficient only, by ability)
-- [ ] **3.4.6** Responsive: accordion on mobile/tablet
+- [ ] **3.4.6** Display skill descriptions from Open5E (tooltip or expandable)
+- [ ] **3.4.7** Responsive: accordion on mobile/tablet
 - Estimated: 3 hours
 
 #### 3.5 Combat Stats Section (`src/components/character-sheet/CombatStats.tsx`)
@@ -545,11 +546,11 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - [ ] **3.8.1** Display spellcasting ability, save DC, attack bonus
 - [ ] **3.8.2** Spell slot tracker per level (checkboxes)
 - [ ] **3.8.3** List spells by level with expand/collapse
-- [ ] **3.8.4** Spell cards with full details (range, duration, components, description)
+- [ ] **3.8.4** Spell cards with full details from Open5E (range, duration, components, description)
 - [ ] **3.8.5** Mark concentration spells
 - [ ] **3.8.6** Ritual indicator
 - [ ] **3.8.7** Prepared/Known toggle for applicable classes
-- [ ] **3.8.8** Add spell from database search
+- [ ] **3.8.8** Add spell from database search with description preview
 - [ ] **3.8.9** Remove spell
 - Estimated: 5 hours
 
@@ -559,19 +560,20 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 - [ ] **3.9.2** Equip/unequip toggle
 - [ ] **3.9.3** Backpack/inventory list
 - [ ] **3.9.4** Add item from Open5E database (searchable dropdown)
-- [ ] **3.9.5** Add custom item form
-- [ ] **3.9.6** Currency tracker (CP, SP, EP, GP, PP)
-- [ ] **3.9.7** Magic item attunement tracking
-- [ ] **3.9.8** Optional encumbrance display
+- [ ] **3.9.5** Display item descriptions from Open5E (tooltip or expandable)
+- [ ] **3.9.6** Add custom item form
+- [ ] **3.9.7** Currency tracker (CP, SP, EP, GP, PP)
+- [ ] **3.9.8** Magic item attunement tracking
+- [ ] **3.9.9** Optional encumbrance display
 - Estimated: 4 hours
 
 #### 3.10 Features & Traits (`src/components/character-sheet/FeaturesPanel.tsx`)
 
 - [ ] **3.10.1** Class features organized by level
-- [ ] **3.10.2** Species traits
-- [ ] **3.10.3** Background feature
-- [ ] **3.10.4** Feats
-- [ ] **3.10.5** Expandable descriptions
+- [ ] **3.10.2** Species traits with descriptions from Open5E
+- [ ] **3.10.3** Background feature with description from Open5E
+- [ ] **3.10.4** Feats with descriptions from Open5E
+- [ ] **3.10.5** Expandable/collapsible descriptions for all features
 - [ ] **3.10.6** Track limited-use features (e.g., "Rage: 2/3")
 - [ ] **3.10.7** Add custom feature
 - Estimated: 3 hours
@@ -659,11 +661,11 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 - [ ] **4.3.1** Class browser/cards
   - Filter by selected documents
   - Show class icon, name, hit die, primary abilities
-  - Expandable details with description
+  - Expandable details with full description from Open5E
 - [ ] **4.3.2** Level selector (1-20)
-- [ ] **4.3.3** Subclass selection (at appropriate levels)
+- [ ] **4.3.3** Subclass selection (at appropriate levels) with descriptions
 - [ ] **4.3.4** Multiclass toggle (add additional class)
-- [ ] **4.3.5** Display class features gained at selected levels
+- [ ] **4.3.5** Display class features gained at selected levels with descriptions
 - [ ] **4.3.6** Validation: must select at least one class
 - Estimated: 4 hours
 
@@ -672,8 +674,9 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 - [ ] **4.4.1** Background browser/cards
   - Filter by selected documents
   - Show granted proficiencies, skills, tools
-- [ ] **4.4.2** Origin feat selection (2024 rules)
-- [ ] **4.4.3** Background feature description
+  - Display full description from Open5E
+- [ ] **4.4.2** Origin feat selection (2024 rules) with descriptions
+- [ ] **4.4.3** Background feature description with full text
 - [ ] **4.4.4** Validation: must select background
 - Estimated: 3 hours
 
@@ -682,8 +685,9 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 - [ ] **4.5.1** Species browser/cards
   - Filter by selected documents
   - Show traits summary
-- [ ] **4.5.2** Subspecies/lineage selection if applicable
-- [ ] **4.5.3** Display racial traits with descriptions
+  - Display full description from Open5E
+- [ ] **4.5.2** Subspecies/lineage selection if applicable with descriptions
+- [ ] **4.5.3** Display racial traits with full descriptions from Open5E
 - [ ] **4.5.4** Handle ability score bonuses
 - [ ] **4.5.5** Validation: must select species
 - Estimated: 3 hours
