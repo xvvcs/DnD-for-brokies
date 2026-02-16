@@ -8,6 +8,9 @@
 // Ability score calculations
 export * from './ability-scores';
 
+// Proficiency system
+export * from './proficiency';
+
 // Combat calculations
 export * from './combat';
 
