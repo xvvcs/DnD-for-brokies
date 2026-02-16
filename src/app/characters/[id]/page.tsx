@@ -12,6 +12,7 @@ export function generateStaticParams() {
   return [{ id: 'debug-fighter' }, { id: 'debug-wizard' }];
 }
 
-export default function CharacterSheetPage({ params }: { params: { id: string } }) {
-  return <CharacterSheetClient characterId={params.id} />;
+export default async function CharacterSheetPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  return <CharacterSheetClient characterId={id} />;
 }
