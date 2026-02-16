@@ -492,11 +492,11 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 
 #### 3.3 Ability Scores Panel (`src/components/character-sheet/AbilityScores.tsx`)
 
-- [ ] **3.3.1** Display 6 ability scores with modifiers
-- [ ] **3.3.2** Inline editing for ability scores
-- [ ] **3.3.3** Display saving throw modifiers
-- [ ] **3.3.4** Toggle proficiency for each saving throw
-- [ ] **3.3.5** Visual indicators for proficient saves
+- [x] **3.3.1** Display 6 ability scores with modifiers
+- [x] **3.3.2** Inline editing for ability scores
+- [x] **3.3.3** Display saving throw modifiers
+- [x] **3.3.4** Toggle proficiency for each saving throw
+- [x] **3.3.5** Visual indicators for proficient saves
 - Estimated: 3 hours
 
 #### 3.4 Skills Panel (`src/components/character-sheet/SkillsPanel.tsx`)
