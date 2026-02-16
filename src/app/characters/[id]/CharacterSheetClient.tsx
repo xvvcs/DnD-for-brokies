@@ -137,6 +137,16 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
 
         {/* Middle Column */}
         <div className="flex flex-col gap-4">
+          {/* Combat Stats */}
+          <CombatStats
+            combatStats={character.combat}
+            classes={character.classes}
+            conditions={character.conditions}
+            onACChange={(ac) => console.log('AC changed:', ac)}
+            onDeathSaveChange={(type, value) => console.log('Death save changed:', type, value)}
+            onConditionToggle={(key) => console.log('Condition toggled:', key)}
+          />
+
           {/* HP Tracker */}
           <CharacterSheetSection
             title="Hit Points"
@@ -200,16 +210,6 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
               </div>
             </div>
           </CharacterSheetSection>
-
-          {/* Combat Stats */}
-          <CombatStats
-            combatStats={character.combat}
-            classes={character.classes}
-            conditions={character.conditions}
-            onACChange={(ac) => console.log('AC changed:', ac)}
-            onDeathSaveChange={(type, value) => console.log('Death save changed:', type, value)}
-            onConditionToggle={(key) => console.log('Condition toggled:', key)}
-          />
         </div>
 
         {/* Right Column */}
