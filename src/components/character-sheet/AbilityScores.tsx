@@ -5,13 +5,14 @@
  * Scores are displayed left-to-right in a single row with click-to-edit functionality.
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 
 import { cn } from '@/lib/utils';
 import type { AbilityScore } from '@/types/game';
 import { ABILITY_SCORES } from '@/types/game';
 import { formatModifier } from '@/lib/engine/ability-scores';
 import { EditableField } from './EditableField';
+import { ChevronDown, ChevronUp } from 'lucide-react';
 
 // Full names for abilities
 const ABILITY_NAMES: Record<AbilityScore, string> = {
@@ -189,12 +190,17 @@ export function AbilityScores({
   onSave,
   className,
 }: AbilityScoresProps) {
+  const [showSaves, setShowSaves] = useState(false);
+
   // Calculate saving throw modifiers
   const getSaveModifier = (ability: AbilityScore): number => {
     const baseMod = modifiers[ability] ?? 0;
     const profBonus = saveProficiencies[ability] ? proficiencyBonus : 0;
     return baseMod + profBonus;
   };
+
+  // Count proficient saves
+  const proficientCount = ABILITY_SCORES.filter((ability) => saveProficiencies[ability]).length;
 
   return (
     <div
@@ -208,9 +214,41 @@ export function AbilityScores({
       <div className="flex flex-col xl:flex-row gap-4">
         {/* Ability Scores Row - All 6 in one line */}
         <div className="flex-1">
-          <h3 className="text-amber-100 text-xs font-bold uppercase tracking-wider mb-2">
-            Ability Scores
-          </h3>
+          <div className="flex items-center justify-between mb-2">
+            <h3 className="text-amber-100 text-xs font-bold uppercase tracking-wider">
+              Ability Scores
+            </h3>
+
+            {/* Minimal toggle for saving throws */}
+            <button
+              type="button"
+              onClick={() => setShowSaves(!showSaves)}
+              className={cn(
+                'flex items-center gap-1 px-2 py-1 rounded',
+                'text-[10px] font-medium uppercase tracking-wider',
+                'transition-colors',
+                showSaves
+                  ? 'bg-amber-700 text-amber-100 hover:bg-amber-600'
+                  : 'bg-amber-800 text-amber-300 hover:bg-amber-700'
+              )}
+              title={showSaves ? 'Hide saving throws' : 'Show saving throws'}
+            >
+              {showSaves ? (
+                <>
+                  <ChevronUp className="w-3 h-3" />
+                  <span className="hidden sm:inline">Hide</span>
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-3 h-3" />
+                  <span>Saves</span>
+                  {proficientCount > 0 && (
+                    <span className="ml-1 text-amber-200">({proficientCount})</span>
+                  )}
+                </>
+              )}
+            </button>
+          </div>
           <div className="flex gap-2">
             {ABILITY_SCORES.map((ability) => (
               <AbilityScoreItem
@@ -225,24 +263,26 @@ export function AbilityScores({
           </div>
         </div>
 
-        {/* Saving Throws */}
-        <div className="xl:w-64 shrink-0">
-          <h4 className="text-amber-100 text-xs font-bold uppercase tracking-wider mb-2">
-            Saving Throws
-            <span className="text-[10px] font-normal text-amber-400 ml-2">(Click to toggle)</span>
-          </h4>
-          <div className="grid grid-cols-3 xl:grid-cols-2 gap-1.5">
-            {ABILITY_SCORES.map((ability) => (
-              <SavingThrowItem
-                key={`save-${ability}`}
-                ability={ability}
-                isProficient={saveProficiencies[ability] ?? false}
-                totalModifier={getSaveModifier(ability)}
-                onToggle={() => onSaveProficiencyChange?.(ability, !saveProficiencies[ability])}
-              />
-            ))}
+        {/* Saving Throws - Collapsible */}
+        {showSaves && (
+          <div className="xl:w-64 shrink-0 animate-in slide-in-from-top-2 duration-200">
+            <h4 className="text-amber-100 text-xs font-bold uppercase tracking-wider mb-2">
+              Saving Throws
+              <span className="text-[10px] font-normal text-amber-400 ml-2">(Click to toggle)</span>
+            </h4>
+            <div className="grid grid-cols-3 xl:grid-cols-2 gap-1.5">
+              {ABILITY_SCORES.map((ability) => (
+                <SavingThrowItem
+                  key={`save-${ability}`}
+                  ability={ability}
+                  isProficient={saveProficiencies[ability] ?? false}
+                  totalModifier={getSaveModifier(ability)}
+                  onToggle={() => onSaveProficiencyChange?.(ability, !saveProficiencies[ability])}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
