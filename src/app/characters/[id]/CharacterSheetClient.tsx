@@ -15,8 +15,7 @@ import {
   CharacterSheetHeader,
 } from '@/components/character-sheet/CharacterSheetLayout';
 import { IdentityBar } from '@/components/character-sheet/IdentityBar';
-import { SaveProficiency } from '@/components/character-sheet/ProficiencyBadge';
-import { EditableField } from '@/components/character-sheet/EditableField';
+import { AbilityScores } from '@/components/character-sheet/AbilityScores';
 import { mockCharacter, mockSpellcaster } from '@/lib/debug/mockCharacters';
 import type { Character } from '@/types/character';
 
@@ -85,71 +84,47 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
         />
       </CharacterSheetHeader>
 
+      {/* Ability Scores Bar - Right under header */}
+      <CharacterSheetHeader>
+        <AbilityScores
+          scores={character.abilityScores.total}
+          modifiers={character.abilityScores.modifier}
+          saveProficiencies={{
+            STR: character.classes.some((c) => c.key === 'fighter' || c.key === 'barbarian'),
+            DEX: false,
+            CON: character.classes.some((c) => c.key === 'fighter' || c.key === 'barbarian'),
+            INT: false,
+            WIS: false,
+            CHA: false,
+          }}
+          proficiencyBonus={proficiencyBonus}
+          onScoreChange={(ability, score) => {
+            // TODO: Update ability score
+            console.log(`Update ${ability} to ${score}`);
+          }}
+          onSaveProficiencyChange={(ability, proficient) => {
+            // TODO: Toggle save proficiency
+            console.log(`Toggle ${ability} save proficiency to ${proficient}`);
+          }}
+          onSave={handleSave}
+        />
+      </CharacterSheetHeader>
+
       {/* Main Content Grid */}
       <CharacterSheetGrid>
         {/* Left Column */}
         <div className="flex flex-col gap-4">
-          {/* Ability Scores */}
-          <CharacterSheetSection title="Ability Scores">
-            <div className="grid grid-cols-2 gap-3">
-              {Object.entries(character.abilityScores.total).map(([ability, score]) => {
-                const modifier =
-                  character.abilityScores.modifier[
-                    ability as keyof typeof character.abilityScores.modifier
-                  ];
-
-                return (
-                  <div
-                    key={ability}
-                    className="flex items-center justify-between p-2 bg-amber-50 rounded"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-amber-900 w-8">{ability}</span>
-                      <EditableField
-                        value={score}
-                        type="number"
-                        min={3}
-                        max={20}
-                        onChange={(val) => {
-                          // TODO: Update ability score
-                          console.log(`Update ${ability} to ${val}`);
-                        }}
-                        onSave={handleSave}
-                        className="w-12 text-center"
-                      />
-                    </div>
-                    <span
-                      className={`font-bold text-lg ${modifier >= 0 ? 'text-emerald-600' : 'text-red-600'}`}
-                    >
-                      {modifier >= 0 ? `+${modifier}` : modifier}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
+          {/* Skills Panel Placeholder */}
+          <CharacterSheetSection title="Skills">
+            <div className="text-center py-8 text-gray-500">Skills panel coming soon...</div>
           </CharacterSheetSection>
 
-          {/* Saving Throws */}
-          <CharacterSheetSection title="Saving Throws">
-            <div className="space-y-1">
-              {Object.entries(character.abilityScores.modifier).map(([ability, modifier]) => {
-                // Mock proficiency for demonstration
-                const isProficient = ability === 'STR' || ability === 'CON';
-                const totalModifier = isProficient ? modifier + proficiencyBonus : modifier;
-
-                return (
-                  <SaveProficiency
-                    key={ability}
-                    ability={ability}
-                    modifier={totalModifier}
-                    isProficient={isProficient}
-                    onToggle={() => {
-                      // TODO: Toggle save proficiency
-                      console.log(`Toggle ${ability} save proficiency`);
-                    }}
-                  />
-                );
-              })}
+          {/* Passive Perception */}
+          <CharacterSheetSection title="Passive Perception">
+            <div className="text-center py-4">
+              <div className="text-3xl font-bold text-amber-900">
+                {10 + (character.abilityScores.modifier.WIS || 0)}
+              </div>
             </div>
           </CharacterSheetSection>
         </div>
