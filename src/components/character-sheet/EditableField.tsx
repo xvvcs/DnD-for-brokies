@@ -135,10 +135,9 @@ export function EditableField({
     return (
       <div
         className={cn(
-          'group cursor-pointer rounded px-2 py-1',
+          'cursor-pointer rounded px-2 py-1',
           'hover:bg-amber-100 transition-colors',
           'border border-transparent hover:border-amber-300',
-          'flex items-center',
           className
         )}
         onClick={handleStartEdit}
@@ -150,13 +149,8 @@ export function EditableField({
           }
         }}
       >
-        <div className="flex-1">
-          {label && <span className="text-xs text-gray-500 block">{label}</span>}
-          <span className="font-medium">{value || placeholder || '\u00A0'}</span>
-        </div>
-        <span className="ml-2 opacity-0 group-hover:opacity-50 text-xs text-gray-400 flex-shrink-0">
-          ✎
-        </span>
+        {label && <span className="text-xs text-gray-500 block">{label}</span>}
+        <span className="font-medium">{value || placeholder || '\u00A0'}</span>
       </div>
     );
   }
