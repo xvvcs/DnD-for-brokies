@@ -17,6 +17,7 @@ import {
 import { IdentityBar } from '@/components/character-sheet/IdentityBar';
 import { AbilityScores } from '@/components/character-sheet/AbilityScores';
 import { SkillsPanel } from '@/components/character-sheet/SkillsPanel';
+import { CombatStats } from '@/components/character-sheet/CombatStats';
 import { mockCharacter, mockSpellcaster } from '@/lib/debug/mockCharacters';
 import type { Character } from '@/types/character';
 import type { ProficiencyLevel } from '@/types/game';
@@ -201,71 +202,14 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
           </CharacterSheetSection>
 
           {/* Combat Stats */}
-          <CharacterSheetSection title="Combat Stats">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="text-center p-3 bg-amber-50 rounded">
-                <div className="text-2xl font-bold text-amber-900">{character.combat.ac.total}</div>
-                <div className="text-xs text-gray-600 uppercase">Armor Class</div>
-              </div>
-              <div className="text-center p-3 bg-amber-50 rounded">
-                <div className="text-2xl font-bold text-amber-900">
-                  {character.combat.initiative >= 0
-                    ? `+${character.combat.initiative}`
-                    : character.combat.initiative}
-                </div>
-                <div className="text-xs text-gray-600 uppercase">Initiative</div>
-              </div>
-              <div className="text-center p-3 bg-amber-50 rounded">
-                <div className="text-2xl font-bold text-amber-900">{character.combat.speed} ft</div>
-                <div className="text-xs text-gray-600 uppercase">Speed</div>
-              </div>
-              <div className="text-center p-3 bg-amber-50 rounded">
-                <div className="text-2xl font-bold text-amber-900">
-                  {character.combat.hitDice.total - character.combat.hitDice.used}/
-                  {character.combat.hitDice.total}
-                </div>
-                <div className="text-xs text-gray-600 uppercase">Hit Dice</div>
-              </div>
-            </div>
-          </CharacterSheetSection>
-
-          {/* Death Saves */}
-          {character.combat.currentHp === 0 && (
-            <CharacterSheetSection title="Death Saves">
-              <div className="space-y-3">
-                <div className="flex items-center gap-4">
-                  <span className="w-20 text-sm font-medium">Successes:</span>
-                  <div className="flex gap-2">
-                    {[0, 1, 2].map((i) => (
-                      <button
-                        key={i}
-                        className={`w-6 h-6 rounded-full border-2 ${
-                          i < character.combat.deathSaves.successes
-                            ? 'bg-emerald-500 border-emerald-600'
-                            : 'bg-gray-200 border-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="w-20 text-sm font-medium">Failures:</span>
-                  <div className="flex gap-2">
-                    {[0, 1, 2].map((i) => (
-                      <button
-                        key={i}
-                        className={`w-6 h-6 rounded-full border-2 ${
-                          i < character.combat.deathSaves.failures
-                            ? 'bg-red-500 border-red-600'
-                            : 'bg-gray-200 border-gray-300'
-                        }`}
-                      />
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </CharacterSheetSection>
-          )}
+          <CombatStats
+            combatStats={character.combat}
+            classes={character.classes}
+            conditions={character.conditions}
+            onACChange={(ac) => console.log('AC changed:', ac)}
+            onDeathSaveChange={(type, value) => console.log('Death save changed:', type, value)}
+            onConditionToggle={(key) => console.log('Condition toggled:', key)}
+          />
         </div>
 
         {/* Right Column */}
