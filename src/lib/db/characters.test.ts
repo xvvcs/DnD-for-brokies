@@ -61,6 +61,7 @@ function createTestCharacter(
     inventory: [],
     currency: { cp: 0, sp: 0, ep: 0, gp: 10, pp: 0 },
     features: [],
+    actions: [],
     conditions: [],
     personality: {
       traits: [],
