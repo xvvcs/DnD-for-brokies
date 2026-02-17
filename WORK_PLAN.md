@@ -533,38 +533,38 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 
 #### 3.7 Actions Panel (`src/components/character-sheet/ActionsPanel.tsx`)
 
-- [ ] **3.7.1** Actions tab: list attacks and class actions
-- [ ] **3.7.2** Bonus Actions tab
-- [ ] **3.7.3** Reactions tab
-- [ ] **3.7.4** Display attack bonus and damage for each action
-- [ ] **3.7.5** Add custom action form
-- [ ] **3.7.6** Equipped weapon attacks auto-populated
+- [x] **3.7.1** Actions tab: list attacks and class actions
+- [x] **3.7.2** Bonus Actions tab
+- [x] **3.7.3** Reactions tab
+- [x] **3.7.4** Display attack bonus and damage for each action
+- [x] **3.7.5** Add custom action form
+- [x] **3.7.6** Equipped weapon attacks auto-populated
 - Estimated: 4 hours
 
 #### 3.8 Spellcasting Panel (`src/components/character-sheet/SpellcastingPanel.tsx`)
 
-- [ ] **3.8.1** Display spellcasting ability, save DC, attack bonus
-- [ ] **3.8.2** Spell slot tracker per level (checkboxes)
-- [ ] **3.8.3** List spells by level with expand/collapse
-- [ ] **3.8.4** Spell cards with full details from Open5E (range, duration, components, description)
-- [ ] **3.8.5** Mark concentration spells
-- [ ] **3.8.6** Ritual indicator
-- [ ] **3.8.7** Prepared/Known toggle for applicable classes
-- [ ] **3.8.8** Add spell from database search with description preview
-- [ ] **3.8.9** Remove spell
+- [x] **3.8.1** Display spellcasting ability, save DC, attack bonus
+- [x] **3.8.2** Spell slot tracker per level (checkboxes)
+- [x] **3.8.3** List spells by level with expand/collapse
+- [x] **3.8.4** Spell cards with full details from Open5E (range, duration, components, description)
+- [x] **3.8.5** Mark concentration spells
+- [x] **3.8.6** Ritual indicator
+- [x] **3.8.7** Prepared/Known toggle for applicable classes
+- [x] **3.8.8** Add spell from database search with description preview
+- [x] **3.8.9** Remove spell
 - Estimated: 5 hours
 
 #### 3.9 Equipment & Inventory (`src/components/character-sheet/EquipmentPanel.tsx`)
 
-- [ ] **3.9.1** Equipped items section (weapon, armor, shield)
-- [ ] **3.9.2** Equip/unequip toggle
-- [ ] **3.9.3** Backpack/inventory list
-- [ ] **3.9.4** Add item from Open5E database (searchable dropdown)
-- [ ] **3.9.5** Display item descriptions from Open5E (tooltip or expandable)
-- [ ] **3.9.6** Add custom item form
-- [ ] **3.9.7** Currency tracker (CP, SP, EP, GP, PP)
-- [ ] **3.9.8** Magic item attunement tracking
-- [ ] **3.9.9** Optional encumbrance display
+- [x] **3.9.1** Equipped items section (weapon, armor, shield)
+- [x] **3.9.2** Equip/unequip toggle
+- [x] **3.9.3** Backpack/inventory list
+- [x] **3.9.4** Add item from Open5E database (searchable dropdown with fast and easy add item option)
+- [x] **3.9.5** Display item descriptions from Open5E (tooltip or expandable)
+- [x] **3.9.6** Add custom item form
+- [x] **3.9.7** Minimalistic embedded currency tracker (CP, SP, EP, GP, PP) with icons
+- [x] **3.9.8** Magic item attunement tracking
+- [x] **3.9.9** Optional encumbrance display
 - Estimated: 4 hours
 
 #### 3.10 Features & Traits (`src/components/character-sheet/FeaturesPanel.tsx`)
