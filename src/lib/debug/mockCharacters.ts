@@ -157,6 +157,7 @@ export const mockCharacter: Character = {
     pp: 0,
   },
   features: [
+    // Class Features
     {
       id: 'fighting-style-defense',
       name: 'Fighting Style: Defense',
@@ -168,7 +169,7 @@ export const mockCharacter: Character = {
       id: 'second-wind',
       name: 'Second Wind',
       description:
-        'You can use a bonus action to regain hit points equal to 1d10 + your fighter level.',
+        'You have a limited well of stamina that you can draw on to protect yourself from harm. On your turn, you can use a bonus action to regain hit points equal to 1d10 + your fighter level. Once you use this feature, you must finish a short or long rest before you can use it again.',
       source: 'Class: Fighter',
       level: 1,
       uses: {
@@ -180,7 +181,8 @@ export const mockCharacter: Character = {
     {
       id: 'action-surge',
       name: 'Action Surge',
-      description: 'You can take one additional action on your turn.',
+      description:
+        'Starting at 2nd level, you can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action on top of your regular action and possible bonus action. Once you use this feature, you must finish a short or long rest before you can use it again.',
       source: 'Class: Fighter',
       level: 2,
       uses: {
@@ -192,9 +194,40 @@ export const mockCharacter: Character = {
     {
       id: 'extra-attack',
       name: 'Extra Attack',
-      description: 'You can attack twice, instead of once, whenever you take the Attack action.',
+      description:
+        'Beginning at 5th level, you can attack twice, instead of once, whenever you take the Attack action on your turn.',
       source: 'Class: Fighter',
       level: 5,
+    },
+    // Species Traits
+    {
+      id: 'human-versatility',
+      name: 'Human Versatility',
+      description:
+        'Humans are the most adaptable and ambitious people among the common races. They have widely varying tastes, morals, and customs in the many different lands where they have settled. When they settle, though, they stay: they build cities to last for the ages.',
+      source: 'Species: Human',
+    },
+    {
+      id: 'human-ability-increase',
+      name: 'Ability Score Increase',
+      description: 'Your ability scores each increase by 1.',
+      source: 'Species: Human',
+    },
+    // Background Feature
+    {
+      id: 'soldier-military-rank',
+      name: 'Military Rank',
+      description:
+        'You have a military rank from your career as a soldier. Soldiers loyal to your former military organization still recognize your authority and influence, and they defer to you if they are of a lower rank. You can invoke your rank to exert influence over other soldiers and requisition simple equipment or horses for temporary use. You can also usually gain access to friendly military encampments and fortresses where your rank is recognized.',
+      source: 'Background: Soldier',
+    },
+    // Feat
+    {
+      id: 'feat-sentinel',
+      name: 'Sentinel',
+      description:
+        "You have mastered techniques to take advantage of every drop in any enemy's guard. When you hit a creature with an opportunity attack, the creature's speed becomes 0 for the rest of the turn. Creatures provoke opportunity attacks from you even if they take the Disengage action before leaving your reach. When a creature within 5 feet of you makes an attack against a target other than you (and that target doesn't have this feat), you can use your reaction to make a melee weapon attack against the attacking creature.",
+      source: 'Feat: Sentinel',
     },
   ],
   actions: [
@@ -434,10 +467,12 @@ export const mockSpellcaster: Character = {
     ],
   },
   features: [
+    // Class Features
     {
       id: 'arcane-recovery',
       name: 'Arcane Recovery',
-      description: 'Once per day, recover spell slots up to half your wizard level.',
+      description:
+        'You have learned to regain some of your magical energy by studying your spellbook. Once per day when you finish a short rest, you can choose expended spell slots to recover. The spell slots can have a combined level that is equal to or less than half your wizard level (rounded up), and none of the slots can be 6th level or higher.',
       source: 'Class: Wizard',
       level: 1,
       uses: {
@@ -449,9 +484,40 @@ export const mockSpellcaster: Character = {
     {
       id: 'spellcasting-wizard',
       name: 'Spellcasting',
-      description: 'You can cast wizard spells.',
+      description:
+        'As a student of arcane magic, you have a spellbook containing spells that show the first glimmerings of your true power. Your spellbook is the repository of the wizard spells you know. It starts with 6 first-level wizard spells of your choice.',
       source: 'Class: Wizard',
       level: 1,
+    },
+    // Species Traits
+    {
+      id: 'human-versatility',
+      name: 'Human Versatility',
+      description:
+        'Humans are the most adaptable and ambitious people among the common races. They have widely varying tastes, morals, and customs in the many different lands where they have settled.',
+      source: 'Species: Human',
+    },
+    {
+      id: 'human-ability-increase',
+      name: 'Ability Score Increase',
+      description: 'Your ability scores each increase by 1.',
+      source: 'Species: Human',
+    },
+    // Background Feature
+    {
+      id: 'sage-researcher',
+      name: 'Researcher',
+      description:
+        'When you attempt to learn or recall a piece of lore, if you do not know that information, you often know where and from whom you can obtain it. Usually, this information comes from a library, scriptorium, university, or a sage or other learned person or creature. Your DM might rule that the knowledge you seek is secreted away in an almost inaccessible place, or that it simply cannot be found. Unearthing the deepest secrets of the multiverse can require an adventure or even a whole campaign.',
+      source: 'Background: Sage',
+    },
+    // Feat
+    {
+      id: 'feat-war-caster',
+      name: 'War Caster',
+      description:
+        "You have practiced casting spells in the midst of combat, learning techniques that grant you the following benefits: You have advantage on Constitution saving throws that you make to maintain your concentration on a spell when you take damage. You can perform the somatic components of spells even when you have weapons or a shield in one or both hands. When a hostile creature's movement provokes an opportunity attack from you, you can use your reaction to cast a spell at the creature, rather than making an opportunity attack. The spell must have a casting time of 1 action and must target only that creature.",
+      source: 'Feat: War Caster',
     },
   ],
   actions: [

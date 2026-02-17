@@ -11,7 +11,6 @@ import React, { useState } from 'react';
 import {
   CharacterSheetLayout,
   CharacterSheetGrid,
-  CharacterSheetSection,
   CharacterSheetHeader,
 } from '@/components/character-sheet/CharacterSheetLayout';
 import { IdentityBar } from '@/components/character-sheet/IdentityBar';
@@ -21,6 +20,7 @@ import { CombatStats } from '@/components/character-sheet/CombatStats';
 import { HPTracker } from '@/components/character-sheet/HPTracker';
 import { CombatActionsPanel } from '@/components/character-sheet/CombatActionsPanel';
 import { EquipmentPanel } from '@/components/character-sheet/EquipmentPanel';
+import { FeaturesPanel } from '@/components/character-sheet/FeaturesPanel';
 import { mockCharacter, mockSpellcaster } from '@/lib/debug/mockCharacters';
 import type { Character } from '@/types/character';
 import type { ProficiencyLevel, SpellLevel } from '@/types/game';
@@ -182,22 +182,32 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
             onRemoveSpell={(spellKey: string) => console.log('Remove spell:', spellKey)}
           />
 
-          {/* Features */}
-          <CharacterSheetSection title="Features & Traits">
-            <div className="space-y-2 max-h-64 overflow-y-auto">
-              {character.features.map((feature) => (
-                <div key={feature.id} className="p-2 bg-amber-50 rounded text-sm">
-                  <div className="font-medium text-amber-900">{feature.name}</div>
-                  <div className="text-xs text-gray-600">{feature.source}</div>
-                  {feature.uses && (
-                    <div className="text-xs mt-1">
-                      Uses: {feature.uses.max - feature.uses.used}/{feature.uses.max}
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </CharacterSheetSection>
+          {/* Features Panel */}
+          <FeaturesPanel
+            features={character.features}
+            onFeatureUse={(featureId) => {
+              // Decrement uses
+              const updatedFeatures = character.features.map((f) =>
+                f.id === featureId && f.uses
+                  ? { ...f, uses: { ...f.uses, used: Math.min(f.uses.max, f.uses.used + 1) } }
+                  : f
+              );
+              handleUpdate({ features: updatedFeatures });
+            }}
+            onFeatureReset={(featureId) => {
+              // Reset uses
+              const updatedFeatures = character.features.map((f) =>
+                f.id === featureId && f.uses ? { ...f, uses: { ...f.uses, used: 0 } } : f
+              );
+              handleUpdate({ features: updatedFeatures });
+            }}
+            onAddFeature={(feature) => {
+              handleUpdate({ features: [...character.features, feature] });
+            }}
+            onRemoveFeature={(featureId) => {
+              handleUpdate({ features: character.features.filter((f) => f.id !== featureId) });
+            }}
+          />
 
           {/* Equipment Panel */}
           <EquipmentPanel
