@@ -20,6 +20,7 @@ import { SkillsPanel } from '@/components/character-sheet/SkillsPanel';
 import { CombatStats } from '@/components/character-sheet/CombatStats';
 import { HPTracker } from '@/components/character-sheet/HPTracker';
 import { CombatActionsPanel } from '@/components/character-sheet/CombatActionsPanel';
+import { EquipmentPanel } from '@/components/character-sheet/EquipmentPanel';
 import { mockCharacter, mockSpellcaster } from '@/lib/debug/mockCharacters';
 import type { Character } from '@/types/character';
 import type { ProficiencyLevel, SpellLevel } from '@/types/game';
@@ -198,19 +199,16 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
             </div>
           </CharacterSheetSection>
 
-          {/* Currency */}
-          <CharacterSheetSection title="Currency">
-            <div className="grid grid-cols-5 gap-2">
-              {Object.entries(character.currency)
-                .filter(([, amount]) => amount > 0)
-                .map(([type, amount]) => (
-                  <div key={type} className="text-center p-2 bg-amber-50 rounded">
-                    <div className="font-bold text-amber-900">{amount}</div>
-                    <div className="text-xs text-gray-600 uppercase">{type}</div>
-                  </div>
-                ))}
-            </div>
-          </CharacterSheetSection>
+          {/* Equipment Panel */}
+          <EquipmentPanel
+            inventory={character.inventory}
+            currency={character.currency}
+            documentKeys={['srd']}
+            onInventoryChange={(inventory) => handleUpdate({ inventory })}
+            onCurrencyChange={(currency) => handleUpdate({ currency })}
+            showEncumbrance={true}
+            strengthScore={character.abilityScores.total.STR}
+          />
 
           {/* Rest Buttons */}
           <div className="grid grid-cols-2 gap-3 print:hidden">

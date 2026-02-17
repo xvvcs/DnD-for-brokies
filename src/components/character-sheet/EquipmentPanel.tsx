@@ -1,0 +1,970 @@
+/**
+ * EquipmentPanel Component
+ *
+ * Comprehensive equipment and inventory management interface:
+ * - Equipped items section (weapon, armor, shield)
+ * - Equip/unequip toggle
+ * - Backpack/inventory list
+ * - Add item from Open5E database (searchable dropdown)
+ * - Display item descriptions from Open5E
+ * - Add custom item form
+ * - Minimalistic embedded currency tracker (CP, SP, EP, GP, PP)
+ * - Magic item attunement tracking
+ * - Optional encumbrance display
+ */
+
+'use client';
+
+import React, { useState, useMemo } from 'react';
+
+import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import {
+  Backpack,
+  Sword,
+  Shield,
+  Plus,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  Search,
+  Coins,
+  Weight,
+  Sparkles,
+  Check,
+} from 'lucide-react';
+import type { EquipmentItem, Currency } from '@/types/game';
+import type { Open5eItem, Open5eWeapon, Open5eArmor } from '@/types/open5e';
+
+// Extended EquipmentItem with additional fields for the UI
+interface ExtendedEquipmentItem extends EquipmentItem {
+  description?: string;
+  weight?: string;
+  cost?: string;
+  isMagicItem?: boolean;
+  requiresAttunement?: boolean;
+  attuned?: boolean;
+  category?: string;
+  damageDice?: string;
+  damageType?: string;
+  armorClass?: number;
+  armorCategory?: string;
+  properties?: string[];
+}
+
+interface EquipmentPanelProps {
+  inventory: ExtendedEquipmentItem[];
+  currency: Currency;
+  documentKeys: string[];
+  onInventoryChange?: (inventory: ExtendedEquipmentItem[]) => void;
+  onCurrencyChange?: (currency: Currency) => void;
+  showEncumbrance?: boolean;
+  strengthScore?: number;
+  className?: string;
+}
+
+// Currency display component
+function CurrencyTracker({
+  currency,
+  onChange,
+}: {
+  currency: Currency;
+  onChange?: (currency: Currency) => void;
+}) {
+  const [localCurrency, setLocalCurrency] = useState<Currency>(currency);
+  const [isEditing, setIsEditing] = useState(false);
+
+  const handleChange = (type: keyof Currency, value: string) => {
+    const numValue = parseInt(value, 10) || 0;
+    const newCurrency = { ...localCurrency, [type]: Math.max(0, numValue) };
+    setLocalCurrency(newCurrency);
+  };
+
+  const handleSave = () => {
+    onChange?.(localCurrency);
+    setIsEditing(false);
+  };
+
+  const currencyTypes: { key: keyof Currency; label: string; color: string }[] = [
+    { key: 'cp', label: 'CP', color: 'text-amber-600' },
+    { key: 'sp', label: 'SP', color: 'text-gray-500' },
+    { key: 'ep', label: 'EP', color: 'text-amber-500' },
+    { key: 'gp', label: 'GP', color: 'text-yellow-500' },
+    { key: 'pp', label: 'PP', color: 'text-slate-400' },
+  ];
+
+  const totalGP =
+    currency.cp / 100 + currency.sp / 10 + currency.ep / 2 + currency.gp + currency.pp * 10;
+
+  return (
+    <div className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-300 rounded-lg p-3">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Coins className="w-4 h-4 text-amber-600" />
+          <h4 className="font-bold text-amber-900 uppercase text-xs">Currency</h4>
+        </div>
+        <span className="text-xs text-amber-700">≈ {totalGP.toFixed(2)} gp</span>
+      </div>
+
+      {isEditing ? (
+        <div className="space-y-2">
+          <div className="grid grid-cols-5 gap-1">
+            {currencyTypes.map(({ key, label }) => (
+              <div key={key} className="text-center">
+                <label className="text-[10px] font-bold text-amber-700 block mb-1">{label}</label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={localCurrency[key]}
+                  onChange={(e) => handleChange(key, e.target.value)}
+                  className="h-7 text-center text-sm p-1"
+                />
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setIsEditing(false)}
+              className="flex-1 h-7 text-xs"
+            >
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave} className="flex-1 h-7 text-xs">
+              Save
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => {
+            setLocalCurrency(currency);
+            setIsEditing(true);
+          }}
+          className="w-full grid grid-cols-5 gap-1 hover:bg-amber-100/50 rounded transition-colors p-1"
+        >
+          {currencyTypes.map(({ key, label, color }) => (
+            <div key={key} className="text-center">
+              <span className="text-[10px] font-bold text-amber-700 block">{label}</span>
+              <span className={cn('text-sm font-bold', color)}>{currency[key]}</span>
+            </div>
+          ))}
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Item card component
+function ItemCard({
+  item,
+  onToggleEquipped,
+  onToggleAttuned,
+  onRemove,
+  onUpdateQuantity,
+}: {
+  item: ExtendedEquipmentItem;
+  onToggleEquipped?: (id: string) => void;
+  onToggleAttuned?: (id: string) => void;
+  onRemove?: (id: string) => void;
+  onUpdateQuantity?: (id: string, quantity: number) => void;
+}) {
+  const [expanded, setExpanded] = useState(false);
+
+  const getItemIcon = () => {
+    if (item.category?.toLowerCase().includes('weapon')) return <Sword className="w-4 h-4" />;
+    if (
+      item.category?.toLowerCase().includes('armor') ||
+      item.category?.toLowerCase().includes('shield')
+    ) {
+      return <Shield className="w-4 h-4" />;
+    }
+    return <Backpack className="w-4 h-4" />;
+  };
+
+  const getItemColor = () => {
+    if (item.isMagicItem)
+      return 'text-purple-600 border-purple-300 bg-gradient-to-b from-purple-50 to-white';
+    if (item.equipped)
+      return 'text-emerald-700 border-emerald-300 bg-gradient-to-b from-emerald-50 to-white';
+    return 'text-amber-700 border-amber-300 bg-gradient-to-b from-amber-50 to-white';
+  };
+
+  return (
+    <div className={cn('border-2 rounded-lg p-3', getItemColor())}>
+      {/* Header */}
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            {getItemIcon()}
+            <h4
+              className={cn(
+                'font-bold truncate',
+                item.isMagicItem ? 'text-purple-900' : 'text-amber-900'
+              )}
+            >
+              {item.name}
+            </h4>
+            {item.isMagicItem && <Sparkles className="w-3 h-3 text-purple-500" />}
+          </div>
+
+          {/* Item Details */}
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            {item.category && (
+              <Badge variant="outline" className="text-[10px] h-5">
+                {item.category}
+              </Badge>
+            )}
+            {item.damageDice && (
+              <Badge variant="outline" className="text-[10px] h-5 bg-red-50">
+                {item.damageDice} {item.damageType}
+              </Badge>
+            )}
+            {item.armorClass && (
+              <Badge variant="outline" className="text-[10px] h-5 bg-blue-50">
+                AC {item.armorClass}
+              </Badge>
+            )}
+            {item.weight && (
+              <span className="text-[10px] text-gray-500 flex items-center gap-1">
+                <Weight className="w-3 h-3" />
+                {item.weight}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex items-center gap-1">
+          {/* Quantity Controls */}
+          <div className="flex items-center gap-1 mr-2">
+            <button
+              type="button"
+              onClick={() => onUpdateQuantity?.(item.id, Math.max(1, item.quantity - 1))}
+              className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 text-gray-600"
+            >
+              -
+            </button>
+            <span className="text-sm font-bold w-6 text-center">{item.quantity}</span>
+            <button
+              type="button"
+              onClick={() => onUpdateQuantity?.(item.id, item.quantity + 1)}
+              className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 text-gray-600"
+            >
+              +
+            </button>
+          </div>
+
+          {/* Equip Toggle */}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <button
+                  type="button"
+                  onClick={() => onToggleEquipped?.(item.id)}
+                  className={cn(
+                    'p-1.5 rounded transition-colors',
+                    item.equipped
+                      ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
+                      : 'hover:bg-gray-200 text-gray-400'
+                  )}
+                >
+                  <Check className="w-4 h-4" />
+                </button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{item.equipped ? 'Equipped' : 'Not equipped'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          {/* Attunement Toggle */}
+          {item.requiresAttunement && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    type="button"
+                    onClick={() => onToggleAttuned?.(item.id)}
+                    className={cn(
+                      'p-1.5 rounded transition-colors',
+                      item.attuned
+                        ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                        : 'hover:bg-gray-200 text-gray-400'
+                    )}
+                  >
+                    <Sparkles className="w-4 h-4" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{item.attuned ? 'Attuned' : 'Requires attunement'}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+          {/* Remove Button */}
+          <button
+            type="button"
+            onClick={() => onRemove?.(item.id)}
+            className="p-1.5 hover:bg-red-100 text-red-600 rounded transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+
+          {/* Expand Button */}
+          <button
+            type="button"
+            onClick={() => setExpanded(!expanded)}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+          >
+            {expanded ? (
+              <ChevronUp className="w-4 h-4 text-gray-600" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-gray-600" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded Description */}
+      {expanded && item.description && (
+        <div className="mt-3 pt-3 border-t border-current border-opacity-20 animate-in slide-in-from-top-2 duration-200">
+          <p className="text-sm text-gray-700 whitespace-pre-wrap">{item.description}</p>
+          {item.properties && item.properties.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {item.properties.map((prop) => (
+                <Badge key={prop} variant="secondary" className="text-[10px]">
+                  {prop}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Add item dialog component
+function AddItemDialog({
+  open,
+  onOpenChange,
+  onAddItem,
+  availableItems,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onAddItem: (item: Partial<ExtendedEquipmentItem>) => void;
+  availableItems: Open5eItem[];
+}) {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedItem, setSelectedItem] = useState<Open5eItem | null>(null);
+  const [customItem, setCustomItem] = useState({
+    name: '',
+    description: '',
+    category: 'Adventuring Gear',
+    weight: '',
+  });
+  const [activeTab, setActiveTab] = useState<'database' | 'custom'>('database');
+
+  const filteredItems = useMemo(() => {
+    if (!searchTerm) return availableItems.slice(0, 50);
+    const term = searchTerm.toLowerCase();
+    return availableItems
+      .filter(
+        (item) =>
+          item.name.toLowerCase().includes(term) ||
+          item.type?.toLowerCase().includes(term) ||
+          item.category?.toLowerCase().includes(term)
+      )
+      .slice(0, 50);
+  }, [searchTerm, availableItems]);
+
+  const handleAddFromDatabase = () => {
+    if (!selectedItem) return;
+
+    const newItem: Partial<ExtendedEquipmentItem> = {
+      name: selectedItem.name,
+      quantity: 1,
+      equipped: false,
+      itemKey: selectedItem.key,
+      description: selectedItem.description,
+      weight: selectedItem.weight || undefined,
+      cost: selectedItem.cost,
+      category: selectedItem.category || selectedItem.type,
+      isMagicItem: selectedItem.type?.toLowerCase().includes('magic'),
+      requiresAttunement: selectedItem.description?.toLowerCase().includes('requires attunement'),
+      damageDice: (selectedItem as Open5eWeapon).damage_dice || undefined,
+      damageType: (selectedItem as Open5eWeapon).damage_type || undefined,
+      armorClass: (selectedItem as Open5eArmor).armor_class || undefined,
+      armorCategory: (selectedItem as Open5eArmor).armor_category || undefined,
+      properties: selectedItem.properties || [],
+    };
+
+    onAddItem(newItem);
+    setSelectedItem(null);
+    setSearchTerm('');
+    onOpenChange(false);
+  };
+
+  const handleAddCustom = () => {
+    if (!customItem.name.trim()) return;
+
+    const newItem: Partial<ExtendedEquipmentItem> = {
+      name: customItem.name,
+      quantity: 1,
+      equipped: false,
+      description: customItem.description,
+      weight: customItem.weight || undefined,
+      category: customItem.category,
+    };
+
+    onAddItem(newItem);
+    setCustomItem({ name: '', description: '', category: 'Adventuring Gear', weight: '' });
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Plus className="w-5 h-5" />
+            Add Item to Inventory
+          </DialogTitle>
+        </DialogHeader>
+
+        {/* Tab Selector */}
+        <div className="flex gap-2 mb-4">
+          <button
+            type="button"
+            onClick={() => setActiveTab('database')}
+            className={cn(
+              'flex-1 py-2 px-4 rounded-lg font-medium transition-colors',
+              activeTab === 'database'
+                ? 'bg-amber-100 text-amber-900 border-2 border-amber-300'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            )}
+          >
+            From Database
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('custom')}
+            className={cn(
+              'flex-1 py-2 px-4 rounded-lg font-medium transition-colors',
+              activeTab === 'custom'
+                ? 'bg-amber-100 text-amber-900 border-2 border-amber-300'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            )}
+          >
+            Custom Item
+          </button>
+        </div>
+
+        {activeTab === 'database' ? (
+          <div className="flex-1 overflow-hidden flex flex-col min-h-[400px]">
+            {/* Search */}
+            <div className="relative mb-3">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setSelectedItem(null);
+                }}
+                placeholder="Search items by name, type, or category..."
+                className="pl-9"
+              />
+            </div>
+
+            {/* Results */}
+            <Command className="flex-1 border rounded-lg overflow-hidden">
+              <CommandList className="max-h-none">
+                <CommandEmpty>No items found.</CommandEmpty>
+                <CommandGroup>
+                  {filteredItems.map((item) => (
+                    <CommandItem
+                      key={item.key}
+                      value={item.key}
+                      onSelect={() => setSelectedItem(item)}
+                      className={cn(
+                        'cursor-pointer',
+                        selectedItem?.key === item.key && 'bg-amber-100'
+                      )}
+                    >
+                      <div className="flex items-center justify-between w-full">
+                        <div>
+                          <span className="font-medium">{item.name}</span>
+                          <span className="text-sm text-gray-500 ml-2">
+                            {item.category || item.type}
+                          </span>
+                        </div>
+                        {selectedItem?.key === item.key && (
+                          <Check className="w-4 h-4 text-amber-600" />
+                        )}
+                      </div>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+
+            {/* Selected Item Preview */}
+            {selectedItem && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-300 rounded-lg">
+                <h4 className="font-bold text-amber-900">{selectedItem.name}</h4>
+                <p className="text-sm text-gray-600 mt-1 line-clamp-3">
+                  {selectedItem.description}
+                </p>
+                <div className="flex gap-2 mt-2 text-xs text-gray-500">
+                  {selectedItem.cost && <span>Cost: {selectedItem.cost}</span>}
+                  {selectedItem.weight && <span>Weight: {selectedItem.weight}</span>}
+                </div>
+              </div>
+            )}
+
+            {/* Add Button */}
+            <Button
+              onClick={handleAddFromDatabase}
+              disabled={!selectedItem}
+              className="mt-3 w-full"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add to Inventory
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-gray-700">Item Name *</label>
+              <Input
+                value={customItem.name}
+                onChange={(e) => setCustomItem({ ...customItem, name: e.target.value })}
+                placeholder="Enter item name..."
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Category</label>
+              <Input
+                value={customItem.category}
+                onChange={(e) => setCustomItem({ ...customItem, category: e.target.value })}
+                placeholder="e.g., Adventuring Gear, Tool, etc."
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Weight</label>
+              <Input
+                value={customItem.weight}
+                onChange={(e) => setCustomItem({ ...customItem, weight: e.target.value })}
+                placeholder="e.g., 2 lb."
+                className="mt-1"
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                value={customItem.description}
+                onChange={(e) => setCustomItem({ ...customItem, description: e.target.value })}
+                placeholder="Enter item description..."
+                rows={4}
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
+            </div>
+
+            <Button onClick={handleAddCustom} disabled={!customItem.name.trim()} className="w-full">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Custom Item
+            </Button>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// Encumbrance calculator
+function calculateEncumbrance(inventory: ExtendedEquipmentItem[], strengthScore: number = 10) {
+  const totalWeight = inventory.reduce((sum, item) => {
+    const weightMatch = item.weight?.match(/(\d+(?:\.\d+)?)/);
+    const weight = weightMatch ? parseFloat(weightMatch[1]) : 0;
+    return sum + weight * item.quantity;
+  }, 0);
+
+  const carryingCapacity = strengthScore * 15;
+  const encumbered = strengthScore * 5;
+  const heavilyEncumbered = strengthScore * 10;
+
+  let status: 'light' | 'encumbered' | 'heavily' | 'exceeded' = 'light';
+  if (totalWeight > carryingCapacity) {
+    status = 'exceeded';
+  } else if (totalWeight > heavilyEncumbered) {
+    status = 'heavily';
+  } else if (totalWeight > encumbered) {
+    status = 'encumbered';
+  }
+
+  return {
+    totalWeight: Math.round(totalWeight * 10) / 10,
+    carryingCapacity,
+    encumbered,
+    heavilyEncumbered,
+    status,
+  };
+}
+
+// Encumbrance display
+function EncumbranceDisplay({
+  inventory,
+  strengthScore,
+}: {
+  inventory: ExtendedEquipmentItem[];
+  strengthScore: number;
+}) {
+  const encumbrance = calculateEncumbrance(inventory, strengthScore);
+
+  const statusColors = {
+    light: 'text-emerald-600 bg-emerald-50 border-emerald-300',
+    encumbered: 'text-yellow-600 bg-yellow-50 border-yellow-300',
+    heavily: 'text-orange-600 bg-orange-50 border-orange-300',
+    exceeded: 'text-red-600 bg-red-50 border-red-300',
+  };
+
+  const statusLabels = {
+    light: 'Unencumbered',
+    encumbered: 'Encumbered',
+    heavily: 'Heavily Encumbered',
+    exceeded: 'Over Capacity',
+  };
+
+  const percentage = Math.min(100, (encumbrance.totalWeight / encumbrance.carryingCapacity) * 100);
+
+  return (
+    <div className={cn('border-2 rounded-lg p-3', statusColors[encumbrance.status])}>
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <Weight className="w-4 h-4" />
+          <h4 className="font-bold uppercase text-xs">Encumbrance</h4>
+        </div>
+        <Badge variant="outline" className="text-[10px]">
+          {statusLabels[encumbrance.status]}
+        </Badge>
+      </div>
+
+      {/* Weight Bar */}
+      <div className="relative h-4 bg-gray-200 rounded-full overflow-hidden mb-2">
+        <div
+          className={cn(
+            'absolute h-full transition-all duration-300',
+            encumbrance.status === 'light' && 'bg-emerald-500',
+            encumbrance.status === 'encumbered' && 'bg-yellow-500',
+            encumbrance.status === 'heavily' && 'bg-orange-500',
+            encumbrance.status === 'exceeded' && 'bg-red-500'
+          )}
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
+
+      {/* Weight Details */}
+      <div className="flex justify-between text-xs">
+        <span>
+          {encumbrance.totalWeight} / {encumbrance.carryingCapacity} lb.
+        </span>
+        <span>{percentage.toFixed(0)}%</span>
+      </div>
+    </div>
+  );
+}
+
+// Equipped items section
+function EquippedItemsSection({
+  equippedItems,
+  onUnequip,
+}: {
+  equippedItems: ExtendedEquipmentItem[];
+  onUnequip?: (id: string) => void;
+}) {
+  if (equippedItems.length === 0) {
+    return (
+      <div className="text-center py-4 text-gray-500 text-sm">
+        <Sword className="w-8 h-8 mx-auto mb-2 text-gray-400" />
+        <p>No items equipped</p>
+        <p className="text-xs mt-1">Equip items from your backpack</p>
+      </div>
+    );
+  }
+
+  // Helper to render description with bold important info
+  const renderDescription = (item: ExtendedEquipmentItem) => {
+    if (!item.description) return null;
+
+    // Build a summary line with key stats
+    const parts: string[] = [];
+
+    if (item.damageDice) {
+      parts.push(`${item.damageDice}${item.damageType ? ` ${item.damageType}` : ''}`);
+    }
+    if (item.armorClass) {
+      parts.push(`AC ${item.armorClass}`);
+    }
+    if (item.properties && item.properties.length > 0) {
+      parts.push(item.properties.join(', '));
+    }
+
+    return (
+      <div className="mt-1 text-[10px] leading-tight text-emerald-800/80 max-h-16 overflow-y-auto">
+        {parts.length > 0 && (
+          <div className="font-bold text-emerald-900 mb-0.5">{parts.join(' • ')}</div>
+        )}
+        <p className="text-emerald-700/70 italic">{item.description}</p>
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-2">
+      {equippedItems.map((item) => (
+        <div key={item.id} className="p-2 bg-emerald-50 border border-emerald-300 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              {item.category?.toLowerCase().includes('weapon') ? (
+                <Sword className="w-4 h-4 text-emerald-600" />
+              ) : item.category?.toLowerCase().includes('armor') ||
+                item.category?.toLowerCase().includes('shield') ? (
+                <Shield className="w-4 h-4 text-emerald-600" />
+              ) : (
+                <Sparkles className="w-4 h-4 text-emerald-600" />
+              )}
+              <span className="font-bold text-emerald-900">{item.name}</span>
+              {item.isMagicItem && <Sparkles className="w-3 h-3 text-purple-500" />}
+            </div>
+            <button
+              type="button"
+              onClick={() => onUnequip?.(item.id)}
+              className="text-[10px] text-emerald-700 hover:text-emerald-900 hover:underline px-2 py-1"
+            >
+              Unequip
+            </button>
+          </div>
+          {renderDescription(item)}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Main EquipmentPanel Component
+export function EquipmentPanel({
+  inventory,
+  currency,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  documentKeys,
+  onInventoryChange,
+  onCurrencyChange,
+  showEncumbrance = false,
+  strengthScore = 10,
+  className,
+}: EquipmentPanelProps) {
+  const [showAddDialog, setShowAddDialog] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    equipped: true,
+    inventory: true,
+  });
+
+  // TODO: In a full implementation, fetch available items from Open5E API
+  // For now, we'll use an empty array as placeholder
+  const availableItems: Open5eItem[] = [];
+
+  const equippedItems = inventory.filter((item) => item.equipped);
+  const backpackItems = inventory.filter((item) => !item.equipped);
+
+  const handleAddItem = (newItem: Partial<ExtendedEquipmentItem>) => {
+    const item: ExtendedEquipmentItem = {
+      id: `item-${Date.now()}`,
+      name: newItem.name || 'Unknown Item',
+      quantity: newItem.quantity || 1,
+      equipped: newItem.equipped || false,
+      ...newItem,
+    };
+
+    onInventoryChange?.([...inventory, item]);
+  };
+
+  const handleToggleEquipped = (id: string) => {
+    const updated = inventory.map((item) =>
+      item.id === id ? { ...item, equipped: !item.equipped } : item
+    );
+    onInventoryChange?.(updated);
+  };
+
+  const handleToggleAttuned = (id: string) => {
+    const updated = inventory.map((item) =>
+      item.id === id ? { ...item, attuned: !item.attuned } : item
+    );
+    onInventoryChange?.(updated);
+  };
+
+  const handleRemoveItem = (id: string) => {
+    const updated = inventory.filter((item) => item.id !== id);
+    onInventoryChange?.(updated);
+  };
+
+  const handleUpdateQuantity = (id: string, quantity: number) => {
+    const updated = inventory.map((item) => (item.id === id ? { ...item, quantity } : item));
+    onInventoryChange?.(updated);
+  };
+
+  const toggleSection = (section: keyof typeof expandedSections) => {
+    setExpandedSections((prev) => ({ ...prev, [section]: !prev[section] }));
+  };
+
+  return (
+    <TooltipProvider>
+      <div
+        className={cn(
+          'bg-gradient-to-b from-amber-50 to-white rounded-lg shadow-lg p-4',
+          className
+        )}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Backpack className="w-5 h-5 text-amber-600" />
+            <h3 className="text-lg font-bold text-amber-900 uppercase tracking-wide">Equipment</h3>
+          </div>
+          <Badge variant="outline" className="text-xs">
+            {inventory.length} {inventory.length === 1 ? 'item' : 'items'}
+          </Badge>
+        </div>
+
+        {/* Currency Tracker */}
+        <div className="mb-4">
+          <CurrencyTracker currency={currency} onChange={onCurrencyChange} />
+        </div>
+
+        {/* Encumbrance (optional) */}
+        {showEncumbrance && (
+          <div className="mb-4">
+            <EncumbranceDisplay inventory={inventory} strengthScore={strengthScore} />
+          </div>
+        )}
+
+        {/* Equipped Items Section */}
+        <div className="mb-4 border-2 border-amber-300 rounded-lg overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleSection('equipped')}
+            className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-emerald-100 to-emerald-50 hover:from-emerald-200 hover:to-emerald-100 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Sword className="w-5 h-5 text-emerald-700" />
+              <h4 className="font-bold text-emerald-900 uppercase text-sm">Equipped</h4>
+              <Badge variant="outline" className="text-[10px] bg-emerald-200">
+                {equippedItems.length}
+              </Badge>
+            </div>
+            {expandedSections.equipped ? (
+              <ChevronUp className="w-5 h-5 text-emerald-700" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-emerald-700" />
+            )}
+          </button>
+
+          {expandedSections.equipped && (
+            <div className="p-3">
+              <EquippedItemsSection
+                equippedItems={equippedItems}
+                onUnequip={handleToggleEquipped}
+              />
+            </div>
+          )}
+        </div>
+
+        {/* Backpack/Inventory Section */}
+        <div className="mb-4 border-2 border-amber-300 rounded-lg overflow-hidden">
+          <button
+            type="button"
+            onClick={() => toggleSection('inventory')}
+            className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-amber-100 to-amber-50 hover:from-amber-200 hover:to-amber-100 transition-colors"
+          >
+            <div className="flex items-center gap-2">
+              <Backpack className="w-5 h-5 text-amber-700" />
+              <h4 className="font-bold text-amber-900 uppercase text-sm">Backpack</h4>
+              <Badge variant="outline" className="text-[10px] bg-amber-200">
+                {backpackItems.length}
+              </Badge>
+            </div>
+            {expandedSections.inventory ? (
+              <ChevronUp className="w-5 h-5 text-amber-700" />
+            ) : (
+              <ChevronDown className="w-5 h-5 text-amber-700" />
+            )}
+          </button>
+
+          {expandedSections.inventory && (
+            <div className="p-3 space-y-2">
+              {backpackItems.length === 0 ? (
+                <div className="text-center py-6 text-gray-500">
+                  <Backpack className="w-10 h-10 mx-auto mb-2 text-gray-400" />
+                  <p className="text-sm">Your backpack is empty</p>
+                  <p className="text-xs mt-1">Add items using the button below</p>
+                </div>
+              ) : (
+                backpackItems.map((item) => (
+                  <ItemCard
+                    key={item.id}
+                    item={item}
+                    onToggleEquipped={handleToggleEquipped}
+                    onToggleAttuned={handleToggleAttuned}
+                    onRemove={handleRemoveItem}
+                    onUpdateQuantity={handleUpdateQuantity}
+                  />
+                ))
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Add Item Button */}
+        <Button
+          variant="outline"
+          onClick={() => setShowAddDialog(true)}
+          className="w-full border-2 border-dashed border-amber-300 hover:border-amber-400 hover:bg-amber-50"
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Add Item
+        </Button>
+
+        {/* Add Item Dialog */}
+        <AddItemDialog
+          open={showAddDialog}
+          onOpenChange={setShowAddDialog}
+          onAddItem={handleAddItem}
+          availableItems={availableItems}
+        />
+      </div>
+    </TooltipProvider>
+  );
+}
+
+export type { ExtendedEquipmentItem };
+export { CurrencyTracker, calculateEncumbrance };
