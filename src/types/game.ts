@@ -169,6 +169,7 @@ export interface ActiveCondition {
   source?: string;
   duration?: string;
   description?: string;
+  exhaustionLevel?: number;
 }
 
 // Attacks

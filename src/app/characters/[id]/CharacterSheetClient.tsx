@@ -147,7 +147,43 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
             conditions={character.conditions}
             onACChange={(ac) => console.log('AC changed:', ac)}
             onDeathSaveChange={(type, value) => console.log('Death save changed:', type, value)}
-            onConditionToggle={(key) => console.log('Condition toggled:', key)}
+            onConditionToggle={(conditionKey) => {
+              const hasCondition = character.conditions.some(
+                (c) => c.conditionKey === conditionKey
+              );
+              if (hasCondition) {
+                handleUpdate({
+                  conditions: character.conditions.filter((c) => c.conditionKey !== conditionKey),
+                });
+              } else {
+                handleUpdate({
+                  conditions: [...character.conditions, { conditionKey }],
+                });
+              }
+            }}
+            onExhaustionChange={(level) => {
+              const existingExhaustion = character.conditions.find(
+                (c) => c.conditionKey === 'exhaustion'
+              );
+              if (level === 0 && existingExhaustion) {
+                handleUpdate({
+                  conditions: character.conditions.filter((c) => c.conditionKey !== 'exhaustion'),
+                });
+              } else if (existingExhaustion) {
+                handleUpdate({
+                  conditions: character.conditions.map((c) =>
+                    c.conditionKey === 'exhaustion' ? { ...c, exhaustionLevel: level } : c
+                  ),
+                });
+              } else {
+                handleUpdate({
+                  conditions: [
+                    ...character.conditions,
+                    { conditionKey: 'exhaustion', exhaustionLevel: level },
+                  ],
+                });
+              }
+            }}
           />
 
           {/* HP Tracker */}
