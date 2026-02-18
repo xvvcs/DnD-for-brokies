@@ -569,21 +569,21 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 
 #### 3.10 Features & Traits (`src/components/character-sheet/FeaturesPanel.tsx`)
 
-- [ ] **3.10.1** Class features organized by level
-- [ ] **3.10.2** Species traits with descriptions from Open5E
-- [ ] **3.10.3** Background feature with description from Open5E
-- [ ] **3.10.4** Feats with descriptions from Open5E
-- [ ] **3.10.5** Expandable/collapsible descriptions for all features
-- [ ] **3.10.6** Track limited-use features (e.g., "Rage: 2/3")
-- [ ] **3.10.7** Add custom feature
+- [x] **3.10.1** Class features organized by level
+- [x] **3.10.2** Species traits with descriptions from Open5E
+- [x] **3.10.3** Background feature with description from Open5E
+- [x] **3.10.4** Feats with descriptions from Open5E
+- [x] **3.10.5** Expandable/collapsible descriptions for all features
+- [x] **3.10.6** Track limited-use features (e.g., "Rage: 2/3")
+- [x] **3.10.7** Add custom feature
 - Estimated: 3 hours
 
 #### 3.11 Conditions Panel (`src/components/character-sheet/ConditionsPanel.tsx`)
 
-- [ ] **3.11.1** Toggle all standard conditions
-- [ ] **3.11.2** Exhaustion level selector (1-6 or 1-10)
-- [ ] **3.11.3** Visual indicator for active conditions
-- [ ] **3.11.4** Condition description tooltips
+- [x] **3.11.1** Toggle all standard conditions
+- [x] **3.11.2** Exhaustion level selector (1-6 or 1-10)
+- [x] **3.11.3** Visual indicator for active conditions
+- [x] **3.11.4** Condition description tooltips
 - Estimated: 2 hours
 
 #### 3.12 Notes & Backstory (`src/components/character-sheet/NotesPanel.tsx`)
