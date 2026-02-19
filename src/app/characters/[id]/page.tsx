@@ -5,7 +5,7 @@
  * Renders the client-side character sheet.
  */
 
-import { CharacterSheetClient } from './CharacterSheetClient';
+import { CharacterSheetClient } from '@/components/character-sheet/CharacterSheetClient';
 
 // Generate static params for debug mode characters
 export function generateStaticParams() {

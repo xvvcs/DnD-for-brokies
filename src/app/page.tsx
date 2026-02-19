@@ -2,6 +2,7 @@ import { Shield, Swords, Scroll, Users } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Navbar, PageWrapper } from '@/components/shared';
+import { SeedCharacterButton } from '@/components/debug/SeedCharacterButton';
 import Link from 'next/link';
 
 export default function Home() {
@@ -131,15 +132,32 @@ export default function Home() {
                 variant="outline"
                 className="border-yellow-600 text-yellow-800 hover:bg-yellow-100"
               >
-                <Link href="/characters/debug-fighter">View Fighter (Level 5)</Link>
+                <Link href="/characters/debug-fighter">View Fighter (mock, no DB)</Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
                 className="border-yellow-600 text-yellow-800 hover:bg-yellow-100"
               >
-                <Link href="/characters/debug-wizard">View Wizard (Level 5)</Link>
+                <Link href="/characters/debug-wizard">View Wizard (mock, no DB)</Link>
               </Button>
+            </div>
+
+            <div className="mt-4 pt-4 border-t border-yellow-300">
+              <p className="text-yellow-700 text-sm mb-3">
+                Or seed a character into IndexedDB and open the{' '}
+                <strong>live character sheet</strong> (auto-save, delete, etc.):
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4">
+                <SeedCharacterButton
+                  variant="fighter"
+                  className="border-yellow-600 text-yellow-800 hover:bg-yellow-100"
+                />
+                <SeedCharacterButton
+                  variant="wizard"
+                  className="border-yellow-600 text-yellow-800 hover:bg-yellow-100"
+                />
+              </div>
             </div>
           </div>
         </div>
