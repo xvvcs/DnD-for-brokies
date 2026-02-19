@@ -180,13 +180,14 @@ export async function deleteCharacter(id: string): Promise<boolean> {
   const existing = await db.characters.get(id);
   if (!existing) return false;
 
-  // Remove from associated campaigns
-  await db.campaigns
-    .where('characterIds')
-    .equals(id)
-    .modify((campaign) => {
+  // Remove from associated campaigns (characterIds is not indexed, so we iterate)
+  const campaigns = await db.campaigns.toArray();
+  for (const campaign of campaigns) {
+    if (campaign.characterIds?.includes(id)) {
       campaign.characterIds = campaign.characterIds.filter((cid: string) => cid !== id);
-    });
+      await db.campaigns.put(campaign);
+    }
+  }
 
   // Delete the character
   await db.characters.delete(id);

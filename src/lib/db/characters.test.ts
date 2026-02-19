@@ -9,7 +9,8 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { db } from './database';
-import type { CharacterTableEntry } from './schema';
+import { deleteCharacter } from './characters';
+import type { CharacterTableEntry, CampaignTableEntry } from './schema';
 
 // Helper to get character by ID (workaround for fake-indexeddb limitation)
 async function getCharacterById(id: string): Promise<CharacterTableEntry | undefined> {
@@ -203,6 +204,64 @@ describe('Database Character Operations', () => {
 
     it('should delete without error when character does not exist', async () => {
       await expect(db.characters.delete('non-existent')).resolves.toBeUndefined();
+    });
+  });
+
+  describe('deleteCharacter (module integration)', () => {
+    beforeEach(async () => {
+      await db.characters.clear();
+      await db.campaigns.clear();
+    });
+
+    it('should delete character via deleteCharacter and return true', async () => {
+      await db.characters.add(createTestCharacter('del-mod-1'));
+
+      const result = await deleteCharacter('del-mod-1');
+
+      expect(result).toBe(true);
+      const all = await db.characters.toArray();
+      expect(all).toHaveLength(0);
+    });
+
+    it('should return false when character does not exist', async () => {
+      const result = await deleteCharacter('non-existent');
+
+      expect(result).toBe(false);
+    });
+
+    it('should remove character from campaign characterIds when deleted', async () => {
+      const charId = 'char-in-campaign';
+      const campaignId = 'camp-with-char';
+
+      await db.characters.add(createTestCharacter(charId));
+      await db.campaigns.add({
+        id: campaignId,
+        name: 'Test Campaign',
+        description: '',
+        edition: '2014',
+        settings: {
+          allowedDocuments: ['wotc-srd'],
+          houseRules: [],
+          useEncumbrance: false,
+          useFeats: true,
+          useMulticlassing: true,
+          customRaces: [],
+          customClasses: [],
+          customBackgrounds: [],
+        },
+        characterIds: [charId],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as CampaignTableEntry);
+
+      const result = await deleteCharacter(charId);
+
+      expect(result).toBe(true);
+      const campaigns = await db.campaigns.toArray();
+      const campaign = campaigns.find((c) => c.id === campaignId);
+      expect(campaign).toBeDefined();
+      expect(campaign!.characterIds).not.toContain(charId);
+      expect(campaign!.characterIds).toHaveLength(0);
     });
   });
 
