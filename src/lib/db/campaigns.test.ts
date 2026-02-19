@@ -110,6 +110,7 @@ function createTestCharacter(
       notes: '',
     },
     appearance: { age: '', height: '', weight: '', eyes: '', skin: '', hair: '', other: '' },
+    sessionNotes: [],
     overrides: {},
     createdAt: now,
     updatedAt: now,

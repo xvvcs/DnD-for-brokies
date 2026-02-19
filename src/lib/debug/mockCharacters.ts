@@ -341,6 +341,7 @@ export const mockCharacter: Character = {
     hair: 'Blonde',
     other: '',
   },
+  sessionNotes: [],
   createdAt: new Date('2024-01-15'),
   updatedAt: new Date(),
   campaignId: undefined,

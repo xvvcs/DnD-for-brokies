@@ -18,6 +18,7 @@ import { AbilityScores } from '@/components/character-sheet/AbilityScores';
 import { SkillsPanel } from '@/components/character-sheet/SkillsPanel';
 import { CombatStats } from '@/components/character-sheet/CombatStats';
 import { HPTracker } from '@/components/character-sheet/HPTracker';
+import { NotesPanel } from '@/components/character-sheet/NotesPanel';
 import { CombatActionsPanel } from '@/components/character-sheet/CombatActionsPanel';
 import { EquipmentPanel } from '@/components/character-sheet/EquipmentPanel';
 import { FeaturesPanel } from '@/components/character-sheet/FeaturesPanel';
@@ -135,6 +136,16 @@ export function CharacterSheetClient({ characterId }: CharacterSheetClientProps)
               // TODO: Update skill proficiency
               console.log(`Update ${skillKey} proficiency to ${level}`);
             }}
+          />
+
+          {/* Notes Panel */}
+          <NotesPanel
+            personality={character.personality}
+            appearance={character.appearance}
+            sessionNotes={character.sessionNotes}
+            onPersonalityChange={(personality) => handleUpdate({ personality })}
+            onAppearanceChange={(appearance) => handleUpdate({ appearance })}
+            onSessionNotesChange={(sessionNotes) => handleUpdate({ sessionNotes })}
           />
         </div>
 

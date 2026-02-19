@@ -588,13 +588,13 @@ Build the comprehensive character sheet interface with all sections from REQUIRE
 
 #### 3.12 Notes & Backstory (`src/components/character-sheet/NotesPanel.tsx`)
 
-- [ ] **3.12.1** Personality Traits field
-- [ ] **3.12.2** Ideals field
-- [ ] **3.12.3** Bonds field
-- [ ] **3.12.4** Flaws field
-- [ ] **3.12.5** Backstory text area
-- [ ] **3.12.6** Appearance/description
-- [ ] **3.12.7** Session notes with timestamps
+- [x] **3.12.1** Personality Traits field
+- [x] **3.12.2** Ideals field
+- [x] **3.12.3** Bonds field
+- [x] **3.12.4** Flaws field
+- [x] **3.12.5** Backstory text area
+- [x] **3.12.6** Appearance/description
+- [x] **3.12.7** Session notes with timestamps
 - Estimated: 2 hours
 
 #### 3.13 Character Sheet Integration

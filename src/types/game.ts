@@ -245,3 +245,11 @@ export interface Appearance {
   hair: string;
   other: string;
 }
+
+// Session Note
+export interface SessionNote {
+  id: string;
+  content: string;
+  timestamp: Date;
+  sessionNumber?: number;
+}

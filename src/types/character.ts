@@ -12,6 +12,7 @@ import type {
   Currency,
   EquipmentItem,
   Personality,
+  SessionNote,
   SpellSlot,
 } from './game';
 
@@ -147,6 +148,9 @@ export interface Character {
 
   // Appearance
   appearance: Appearance;
+
+  // Session Notes
+  sessionNotes: SessionNote[];
 
   // Metadata
   createdAt: Date;
