@@ -17,7 +17,7 @@
 
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 
-import { useWeapons, useArmor, useItems, useMagicItems } from '@/hooks/api/useOpen5e';
+import { useWeapons, useArmor, useItems, useMagicItems, useEquipment } from '@/hooks/api/useOpen5e';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +56,20 @@ function toDisplayString(val: unknown): string {
   return '';
 }
 
+function getPropertyName(prop: unknown): string {
+  if (typeof prop === 'string') return prop;
+  if (prop && typeof prop === 'object') {
+    if ('property' in prop) {
+      const inner = (prop as Record<string, unknown>).property;
+      if (inner && typeof inner === 'object' && 'name' in inner) {
+        return String(inner.name);
+      }
+    }
+    if ('name' in prop) return String((prop as Record<string, unknown>).name);
+  }
+  return '';
+}
+
 /** Extract brief essentials from an Open5E item for list display. */
 function getItemEssentials(item: Open5eItem): string {
   const parts: string[] = [];
@@ -69,12 +83,13 @@ function getItemEssentials(item: Open5eItem): string {
     parts.push(`AC ${armor.armor_class}`);
   }
   if (item.properties && item.properties.length > 0) {
-    parts.push(item.properties.slice(0, 3).join(', '));
+    parts.push(item.properties.map(getPropertyName).filter(Boolean).slice(0, 3).join(', '));
   }
   if (parts.length > 0) return parts.join(' • ');
 
   // Fallback: first sentence of description, max ~80 chars
-  const desc = item.description?.trim() ?? '';
+  const descRaw = (item as unknown as Record<string, unknown>).desc || item.description || '';
+  const desc = String(descRaw).trim();
   if (!desc) return '';
   const firstSentence = desc.split(/[.!?]/)[0]?.trim() ?? '';
   return firstSentence.length > 80 ? `${firstSentence.slice(0, 77)}...` : firstSentence;
@@ -377,11 +392,15 @@ function ItemCard({
           <p className="text-sm text-gray-700 whitespace-pre-wrap">{item.description}</p>
           {item.properties && item.properties.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
-              {item.properties.map((prop) => (
-                <Badge key={prop} variant="secondary" className="text-[10px]">
-                  {prop}
-                </Badge>
-              ))}
+              {item.properties.map((prop, idx) => {
+                const propStr = getPropertyName(prop);
+                if (!propStr) return null;
+                return (
+                  <Badge key={`${propStr}-${idx}`} variant="secondary" className="text-[10px]">
+                    {propStr}
+                  </Badge>
+                );
+              })}
             </div>
           )}
         </div>
@@ -461,10 +480,15 @@ function AddItemDialog({
         };
     }
   })();
-  const availableItems = useMemo(
-    () => (currentQuery.data ?? []) as Open5eItem[],
-    [currentQuery.data]
-  );
+  const availableItems = useMemo(() => {
+    const data = (currentQuery.data ?? []) as Open5eItem[];
+    const seen = new Set<string>();
+    return data.filter((item) => {
+      if (seen.has(item.key)) return false;
+      seen.add(item.key);
+      return true;
+    });
+  }, [currentQuery.data]);
   const {
     isLoading: isLoadingCurrent,
     isError: isErrorCurrent,
@@ -518,24 +542,29 @@ function AddItemDialog({
   const handleAddFromDatabase = () => {
     if (!selectedItem) return;
 
+    const descRaw =
+      (selectedItem as unknown as Record<string, unknown>).desc || selectedItem.description || '';
+    const description = String(descRaw).trim();
+    const properties = selectedItem.properties
+      ? selectedItem.properties.map(getPropertyName).filter(Boolean)
+      : [];
+
     const newItem: Partial<ExtendedEquipmentItem> = {
       name: selectedItem.name,
       quantity: 1,
       equipped: false,
       itemKey: selectedItem.key,
-      description: selectedItem.description,
+      description: description,
       weight: selectedItem.weight || undefined,
       cost: selectedItem.cost,
       category: toDisplayString(selectedItem.category || selectedItem.type) || undefined,
       isMagicItem: toDisplayString(selectedItem.type).toLowerCase().includes('magic'),
-      requiresAttunement: String(selectedItem.description ?? '')
-        .toLowerCase()
-        .includes('requires attunement'),
+      requiresAttunement: description.toLowerCase().includes('requires attunement'),
       damageDice: (selectedItem as Open5eWeapon).damage_dice || undefined,
       damageType: toDisplayString((selectedItem as Open5eWeapon).damage_type) || undefined,
       armorClass: (selectedItem as Open5eArmor).armor_class ?? undefined,
       armorCategory: toDisplayString((selectedItem as Open5eArmor).armor_category) || undefined,
-      properties: selectedItem.properties || [],
+      properties,
     };
 
     onAddItem(newItem);
@@ -673,7 +702,11 @@ function AddItemDialog({
               <div className="mt-3 p-3 bg-amber-50 border border-amber-300 rounded-lg">
                 <h4 className="font-bold text-amber-900">{selectedItem.name}</h4>
                 <p className="text-sm text-gray-600 mt-1 line-clamp-3">
-                  {selectedItem.description}
+                  {String(
+                    (selectedItem as unknown as Record<string, unknown>).desc ||
+                      selectedItem.description ||
+                      ''
+                  ).trim()}
                 </p>
                 <div className="flex gap-2 mt-2 text-xs text-gray-500">
                   {selectedItem.cost && <span>Cost: {selectedItem.cost}</span>}
@@ -872,7 +905,7 @@ function EquippedItemsSection({
       parts.push(`AC ${item.armorClass}`);
     }
     if (item.properties && item.properties.length > 0) {
-      parts.push(item.properties.join(', '));
+      parts.push(item.properties.map(getPropertyName).filter(Boolean).join(', '));
     }
 
     return (
@@ -934,12 +967,19 @@ export function EquipmentPanel({
     inventory: true,
   });
 
+  // Prefetch all equipment in the background to warm up IndexedDB cache
+  // This makes opening the Add Item dialog feel instantaneous for subsequent uses
+  useEquipment(documentKeys, {
+    enabled: documentKeys.length > 0,
+    staleTime: 60 * 60 * 1000,
+  });
+
   const equippedItems = inventory.filter((item) => item.equipped);
   const backpackItems = inventory.filter((item) => !item.equipped);
 
   const handleAddItem = (newItem: Partial<ExtendedEquipmentItem>) => {
     const item: ExtendedEquipmentItem = {
-      id: `item-${Date.now()}`,
+      id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       name: newItem.name || 'Unknown Item',
       quantity: newItem.quantity || 1,
       equipped: newItem.equipped || false,
