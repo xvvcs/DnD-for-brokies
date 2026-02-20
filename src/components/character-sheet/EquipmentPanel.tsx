@@ -444,6 +444,7 @@ function AddItemDialog({
   const handleTabChange = (tab: EquipmentTab) => {
     setActiveTab(tab);
     setSelectedItem(null);
+    setSearchTerm('');
     setVisibleCount(50);
   };
 
@@ -518,11 +519,16 @@ function AddItemDialog({
   const handleObserver = useCallback(
     (entries: IntersectionObserverEntry[]) => {
       const [target] = entries;
-      if (target.isIntersecting && visibleCount < filteredItems.length) {
-        setVisibleCount((prev) => Math.min(prev + 50, filteredItems.length));
+      if (target.isIntersecting) {
+        setVisibleCount((prev) => {
+          if (prev < filteredItems.length) {
+            return Math.min(prev + 50, filteredItems.length);
+          }
+          return prev;
+        });
       }
     },
-    [filteredItems.length, visibleCount]
+    [filteredItems.length]
   );
 
   useEffect(() => {
@@ -602,23 +608,30 @@ function AddItemDialog({
 
         {/* Tab Selector */}
         <div className="flex flex-wrap gap-2 mb-4">
-          {(['weapons', 'armor', 'items', 'magicItems', 'custom'] as const).map((tab) => (
-            <button
-              key={tab}
-              type="button"
-              onClick={() => handleTabChange(tab)}
-              className={cn(
-                'py-2 px-3 rounded-lg font-medium text-sm transition-colors',
-                activeTab === tab
-                  ? 'bg-amber-100 text-amber-900 border-2 border-amber-300'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              )}
-            >
-              {tab === 'custom'
-                ? 'Custom Item'
-                : tab.charAt(0).toUpperCase() + tab.slice(1).replace('magicItems', 'Magic Items')}
-            </button>
-          ))}
+          {(['weapons', 'armor', 'items', 'magicItems', 'custom'] as const).map((tab) => {
+            const tabLabel: Record<EquipmentTab, string> = {
+              weapons: 'Weapons',
+              armor: 'Armor',
+              items: 'Items',
+              magicItems: 'Magic Items',
+              custom: 'Custom Item',
+            };
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => handleTabChange(tab)}
+                className={cn(
+                  'py-2 px-3 rounded-lg font-medium text-sm transition-colors',
+                  activeTab === tab
+                    ? 'bg-amber-100 text-amber-900 border-2 border-amber-300'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                )}
+              >
+                {tabLabel[tab]}
+              </button>
+            );
+          })}
         </div>
 
         {activeTab !== 'custom' ? (
@@ -979,11 +992,11 @@ export function EquipmentPanel({
 
   const handleAddItem = (newItem: Partial<ExtendedEquipmentItem>) => {
     const item: ExtendedEquipmentItem = {
-      id: `item-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
+      ...newItem,
+      id: crypto.randomUUID(),
       name: newItem.name || 'Unknown Item',
       quantity: newItem.quantity || 1,
       equipped: newItem.equipped || false,
-      ...newItem,
     };
 
     onInventoryChange?.([...inventory, item]);
