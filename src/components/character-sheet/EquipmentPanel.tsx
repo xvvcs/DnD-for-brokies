@@ -216,6 +216,9 @@ function CurrencyTracker({
   );
 }
 
+const MIN_ITEM_QUANTITY = 1;
+const MAX_ITEM_QUANTITY = 9999;
+
 // Item card component
 function ItemCard({
   item,
@@ -299,7 +302,9 @@ function ItemCard({
           <div className="flex items-center gap-1 mr-2">
             <button
               type="button"
-              onClick={() => onUpdateQuantity?.(item.id, Math.max(1, item.quantity - 1))}
+              onClick={() =>
+                onUpdateQuantity?.(item.id, Math.max(MIN_ITEM_QUANTITY, item.quantity - 1))
+              }
               className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 text-gray-600"
             >
               -
@@ -307,7 +312,9 @@ function ItemCard({
             <span className="text-sm font-bold w-6 text-center">{item.quantity}</span>
             <button
               type="button"
-              onClick={() => onUpdateQuantity?.(item.id, item.quantity + 1)}
+              onClick={() =>
+                onUpdateQuantity?.(item.id, Math.min(MAX_ITEM_QUANTITY, item.quantity + 1))
+              }
               className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 text-gray-600"
             >
               +
@@ -747,6 +754,7 @@ function AddItemDialog({
                 onChange={(e) => setCustomItem({ ...customItem, name: e.target.value })}
                 placeholder="Enter item name..."
                 className="mt-1"
+                maxLength={100}
               />
             </div>
 
@@ -757,6 +765,7 @@ function AddItemDialog({
                 onChange={(e) => setCustomItem({ ...customItem, category: e.target.value })}
                 placeholder="e.g., Adventuring Gear, Tool, etc."
                 className="mt-1"
+                maxLength={50}
               />
             </div>
 
@@ -767,6 +776,7 @@ function AddItemDialog({
                 onChange={(e) => setCustomItem({ ...customItem, weight: e.target.value })}
                 placeholder="e.g., 2 lb."
                 className="mt-1"
+                maxLength={20}
               />
             </div>
 
@@ -777,6 +787,7 @@ function AddItemDialog({
                 onChange={(e) => setCustomItem({ ...customItem, description: e.target.value })}
                 placeholder="Enter item description..."
                 rows={4}
+                maxLength={2000}
                 className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
               />
             </div>
@@ -1022,7 +1033,10 @@ export function EquipmentPanel({
   };
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
-    const updated = inventory.map((item) => (item.id === id ? { ...item, quantity } : item));
+    const capped = Math.min(Math.max(MIN_ITEM_QUANTITY, quantity), MAX_ITEM_QUANTITY);
+    const updated = inventory.map((item) =>
+      item.id === id ? { ...item, quantity: capped } : item
+    );
     onInventoryChange?.(updated);
   };
 
