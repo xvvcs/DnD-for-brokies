@@ -17,6 +17,7 @@
 
 import React, { useState, useMemo } from 'react';
 
+import { useEquipment } from '@/hooks/api/useOpen5e';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -365,11 +366,13 @@ function AddItemDialog({
   onOpenChange,
   onAddItem,
   availableItems,
+  isLoading = false,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddItem: (item: Partial<ExtendedEquipmentItem>) => void;
   availableItems: Open5eItem[];
+  isLoading?: boolean;
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState<Open5eItem | null>(null);
@@ -495,7 +498,7 @@ function AddItemDialog({
             {/* Results */}
             <Command className="flex-1 border rounded-lg overflow-hidden">
               <CommandList className="max-h-none">
-                <CommandEmpty>No items found.</CommandEmpty>
+                <CommandEmpty>{isLoading ? 'Loading items...' : 'No items found.'}</CommandEmpty>
                 <CommandGroup>
                   {filteredItems.map((item) => (
                     <CommandItem
@@ -776,7 +779,6 @@ function EquippedItemsSection({
 export function EquipmentPanel({
   inventory,
   currency,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   documentKeys,
   onInventoryChange,
   onCurrencyChange,
@@ -790,9 +792,13 @@ export function EquipmentPanel({
     inventory: true,
   });
 
-  // TODO: In a full implementation, fetch available items from Open5E API
-  // For now, we'll use an empty array as placeholder
-  const availableItems: Open5eItem[] = [];
+  const { data: equipmentData, isLoading: isLoadingEquipment } = useEquipment(documentKeys);
+
+  const availableItems: Open5eItem[] = useMemo(() => {
+    if (!equipmentData) return [];
+    const { weapons, armor, items, magicItems } = equipmentData;
+    return [...weapons, ...armor, ...items, ...magicItems];
+  }, [equipmentData]);
 
   const equippedItems = inventory.filter((item) => item.equipped);
   const backpackItems = inventory.filter((item) => !item.equipped);
@@ -960,6 +966,7 @@ export function EquipmentPanel({
           onOpenChange={setShowAddDialog}
           onAddItem={handleAddItem}
           availableItems={availableItems}
+          isLoading={isLoadingEquipment}
         />
       </div>
     </TooltipProvider>

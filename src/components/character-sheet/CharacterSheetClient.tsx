@@ -268,7 +268,7 @@ function DebugCharacterSheet({ characterId }: CharacterSheetClientProps) {
           <EquipmentPanel
             inventory={character.inventory}
             currency={character.currency}
-            documentKeys={['srd']}
+            documentKeys={['wotc-srd', 'srd-2024']}
             onInventoryChange={(inventory) => handleUpdate({ inventory })}
             onCurrencyChange={(currency) => handleUpdate({ currency })}
             showEncumbrance={true}
@@ -679,7 +679,7 @@ function LiveCharacterSheet({ characterId }: CharacterSheetClientProps) {
           <EquipmentPanel
             inventory={character.inventory}
             currency={character.currency}
-            documentKeys={['srd']}
+            documentKeys={['wotc-srd', 'srd-2024']}
             onInventoryChange={(inventory) => handleUpdate({ inventory })}
             onCurrencyChange={(currency) => handleUpdate({ currency })}
             showEncumbrance={true}
