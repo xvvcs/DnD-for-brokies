@@ -34,6 +34,7 @@ export async function fetchWeaponsByDocument(
       documentKey,
       ttl: CACHE_TTL.content,
       forceRefresh,
+      pageSize: 1000,
     }
   );
 }
@@ -79,6 +80,7 @@ export async function fetchArmorByDocument(
       documentKey,
       ttl: CACHE_TTL.content,
       forceRefresh,
+      pageSize: 1000,
     }
   );
 }
@@ -124,6 +126,7 @@ export async function fetchItemsByDocument(
       documentKey,
       ttl: CACHE_TTL.content,
       forceRefresh,
+      pageSize: 1000,
     }
   );
 }
@@ -169,6 +172,7 @@ export async function fetchMagicItemsByDocument(
       documentKey,
       ttl: CACHE_TTL.content,
       forceRefresh,
+      pageSize: 1000,
     }
   );
 }

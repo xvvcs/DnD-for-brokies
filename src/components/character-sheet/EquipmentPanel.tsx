@@ -15,7 +15,7 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 
 import { useWeapons, useArmor, useItems, useMagicItems } from '@/hooks/api/useOpen5e';
 import { cn } from '@/lib/utils';
@@ -413,6 +413,20 @@ function AddItemDialog({
     weight: '',
   });
   const [activeTab, setActiveTab] = useState<EquipmentTab>('weapons');
+  const [visibleCount, setVisibleCount] = useState(50);
+
+  // We handle search term and tab resets without useEffect to avoid cascading renders
+  const handleSearchTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setSelectedItem(null);
+    setVisibleCount(50);
+  };
+
+  const handleTabChange = (tab: EquipmentTab) => {
+    setActiveTab(tab);
+    setSelectedItem(null);
+    setVisibleCount(50);
+  };
 
   const weaponsQuery = useWeapons(documentKeys, {
     enabled: open && activeTab === 'weapons' && documentKeys.length > 0,
@@ -459,17 +473,47 @@ function AddItemDialog({
   } = currentQuery;
 
   const filteredItems = useMemo(() => {
-    if (!searchTerm) return availableItems.slice(0, 50);
+    if (!searchTerm) return availableItems;
     const term = searchTerm.toLowerCase();
-    return availableItems
-      .filter(
-        (item) =>
-          item.name.toLowerCase().includes(term) ||
-          toDisplayString(item.type).toLowerCase().includes(term) ||
-          toDisplayString(item.category).toLowerCase().includes(term)
-      )
-      .slice(0, 50);
+    return availableItems.filter(
+      (item) =>
+        item.name.toLowerCase().includes(term) ||
+        toDisplayString(item.type).toLowerCase().includes(term) ||
+        toDisplayString(item.category).toLowerCase().includes(term)
+    );
   }, [searchTerm, availableItems]);
+
+  const visibleItems = useMemo(
+    () => filteredItems.slice(0, visibleCount),
+    [filteredItems, visibleCount]
+  );
+
+  // Infinite scroll observer
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting && visibleCount < filteredItems.length) {
+        setVisibleCount((prev) => Math.min(prev + 50, filteredItems.length));
+      }
+    },
+    [filteredItems.length, visibleCount]
+  );
+
+  useEffect(() => {
+    const element = observerTarget.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: '100px',
+      threshold: 0.1,
+    });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   const handleAddFromDatabase = () => {
     if (!selectedItem) return;
@@ -533,7 +577,7 @@ function AddItemDialog({
             <button
               key={tab}
               type="button"
-              onClick={() => setActiveTab(tab)}
+              onClick={() => handleTabChange(tab)}
               className={cn(
                 'py-2 px-3 rounded-lg font-medium text-sm transition-colors',
                 activeTab === tab
@@ -555,10 +599,7 @@ function AddItemDialog({
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setSelectedItem(null);
-                }}
+                onChange={handleSearchTermChange}
                 placeholder="Search items by name, type, or category..."
                 className="pl-9"
               />
@@ -586,7 +627,7 @@ function AddItemDialog({
                   {isLoadingCurrent ? 'Loading items...' : 'No items found.'}
                 </CommandEmpty>
                 <CommandGroup>
-                  {filteredItems.map((item) => {
+                  {visibleItems.map((item) => {
                     const essentials = getItemEssentials(item);
                     return (
                       <CommandItem
@@ -619,6 +660,10 @@ function AddItemDialog({
                       </CommandItem>
                     );
                   })}
+                  {/* Invisible div for intersection observer to trigger loading more items */}
+                  {visibleCount < filteredItems.length && (
+                    <div ref={observerTarget} className="h-4 w-full" />
+                  )}
                 </CommandGroup>
               </CommandList>
             </Command>
