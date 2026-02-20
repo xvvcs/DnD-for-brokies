@@ -17,7 +17,7 @@
 
 import React, { useState, useMemo } from 'react';
 
-import { useEquipment } from '@/hooks/api/useOpen5e';
+import { useWeapons, useArmor, useItems, useMagicItems } from '@/hooks/api/useOpen5e';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -47,6 +47,38 @@ import {
 } from 'lucide-react';
 import type { EquipmentItem, Currency } from '@/types/game';
 import type { Open5eItem, Open5eWeapon, Open5eArmor } from '@/types/open5e';
+
+/** Open5E v2 API may return { name, key, url } objects instead of strings. Extract display string. */
+function toDisplayString(val: unknown): string {
+  if (typeof val === 'string') return val;
+  if (val && typeof val === 'object' && 'name' in val)
+    return String((val as { name: string }).name);
+  return '';
+}
+
+/** Extract brief essentials from an Open5E item for list display. */
+function getItemEssentials(item: Open5eItem): string {
+  const parts: string[] = [];
+  const weapon = item as Open5eWeapon;
+  const armor = item as Open5eArmor;
+
+  if (weapon.damage_dice && weapon.damage_type) {
+    parts.push(`${weapon.damage_dice} ${toDisplayString(weapon.damage_type)}`);
+  }
+  if (armor.armor_class != null) {
+    parts.push(`AC ${armor.armor_class}`);
+  }
+  if (item.properties && item.properties.length > 0) {
+    parts.push(item.properties.slice(0, 3).join(', '));
+  }
+  if (parts.length > 0) return parts.join(' • ');
+
+  // Fallback: first sentence of description, max ~80 chars
+  const desc = item.description?.trim() ?? '';
+  if (!desc) return '';
+  const firstSentence = desc.split(/[.!?]/)[0]?.trim() ?? '';
+  return firstSentence.length > 80 ? `${firstSentence.slice(0, 77)}...` : firstSentence;
+}
 
 // Extended EquipmentItem with additional fields for the UI
 interface ExtendedEquipmentItem extends EquipmentItem {
@@ -186,11 +218,9 @@ function ItemCard({
   const [expanded, setExpanded] = useState(false);
 
   const getItemIcon = () => {
-    if (item.category?.toLowerCase().includes('weapon')) return <Sword className="w-4 h-4" />;
-    if (
-      item.category?.toLowerCase().includes('armor') ||
-      item.category?.toLowerCase().includes('shield')
-    ) {
+    const cat = toDisplayString(item.category);
+    if (cat.toLowerCase().includes('weapon')) return <Sword className="w-4 h-4" />;
+    if (cat.toLowerCase().includes('armor') || cat.toLowerCase().includes('shield')) {
       return <Shield className="w-4 h-4" />;
     }
     return <Backpack className="w-4 h-4" />;
@@ -224,14 +254,14 @@ function ItemCard({
 
           {/* Item Details */}
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            {item.category && (
+            {toDisplayString(item.category) && (
               <Badge variant="outline" className="text-[10px] h-5">
-                {item.category}
+                {toDisplayString(item.category)}
               </Badge>
             )}
             {item.damageDice && (
               <Badge variant="outline" className="text-[10px] h-5 bg-red-50">
-                {item.damageDice} {item.damageType}
+                {item.damageDice} {toDisplayString(item.damageType)}
               </Badge>
             )}
             {item.armorClass && (
@@ -360,19 +390,19 @@ function ItemCard({
   );
 }
 
+type EquipmentTab = 'weapons' | 'armor' | 'items' | 'magicItems' | 'custom';
+
 // Add item dialog component
 function AddItemDialog({
   open,
   onOpenChange,
   onAddItem,
-  availableItems,
-  isLoading = false,
+  documentKeys,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddItem: (item: Partial<ExtendedEquipmentItem>) => void;
-  availableItems: Open5eItem[];
-  isLoading?: boolean;
+  documentKeys: string[];
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState<Open5eItem | null>(null);
@@ -382,7 +412,51 @@ function AddItemDialog({
     category: 'Adventuring Gear',
     weight: '',
   });
-  const [activeTab, setActiveTab] = useState<'database' | 'custom'>('database');
+  const [activeTab, setActiveTab] = useState<EquipmentTab>('weapons');
+
+  const weaponsQuery = useWeapons(documentKeys, {
+    enabled: open && activeTab === 'weapons' && documentKeys.length > 0,
+  });
+  const armorQuery = useArmor(documentKeys, {
+    enabled: open && activeTab === 'armor' && documentKeys.length > 0,
+  });
+  const itemsQuery = useItems(documentKeys, {
+    enabled: open && activeTab === 'items' && documentKeys.length > 0,
+  });
+  const magicItemsQuery = useMagicItems(documentKeys, {
+    enabled: open && activeTab === 'magicItems' && documentKeys.length > 0,
+  });
+
+  const currentQuery = (() => {
+    switch (activeTab) {
+      case 'weapons':
+        return weaponsQuery;
+      case 'armor':
+        return armorQuery;
+      case 'items':
+        return itemsQuery;
+      case 'magicItems':
+        return magicItemsQuery;
+      default:
+        return {
+          data: [] as Open5eItem[],
+          isLoading: false,
+          isError: false,
+          error: null,
+          refetch: () => Promise.resolve(),
+        };
+    }
+  })();
+  const availableItems = useMemo(
+    () => (currentQuery.data ?? []) as Open5eItem[],
+    [currentQuery.data]
+  );
+  const {
+    isLoading: isLoadingCurrent,
+    isError: isErrorCurrent,
+    error: errorCurrent,
+    refetch: refetchCurrent,
+  } = currentQuery;
 
   const filteredItems = useMemo(() => {
     if (!searchTerm) return availableItems.slice(0, 50);
@@ -391,8 +465,8 @@ function AddItemDialog({
       .filter(
         (item) =>
           item.name.toLowerCase().includes(term) ||
-          item.type?.toLowerCase().includes(term) ||
-          item.category?.toLowerCase().includes(term)
+          toDisplayString(item.type).toLowerCase().includes(term) ||
+          toDisplayString(item.category).toLowerCase().includes(term)
       )
       .slice(0, 50);
   }, [searchTerm, availableItems]);
@@ -408,13 +482,15 @@ function AddItemDialog({
       description: selectedItem.description,
       weight: selectedItem.weight || undefined,
       cost: selectedItem.cost,
-      category: selectedItem.category || selectedItem.type,
-      isMagicItem: selectedItem.type?.toLowerCase().includes('magic'),
-      requiresAttunement: selectedItem.description?.toLowerCase().includes('requires attunement'),
+      category: toDisplayString(selectedItem.category || selectedItem.type) || undefined,
+      isMagicItem: toDisplayString(selectedItem.type).toLowerCase().includes('magic'),
+      requiresAttunement: String(selectedItem.description ?? '')
+        .toLowerCase()
+        .includes('requires attunement'),
       damageDice: (selectedItem as Open5eWeapon).damage_dice || undefined,
-      damageType: (selectedItem as Open5eWeapon).damage_type || undefined,
-      armorClass: (selectedItem as Open5eArmor).armor_class || undefined,
-      armorCategory: (selectedItem as Open5eArmor).armor_category || undefined,
+      damageType: toDisplayString((selectedItem as Open5eWeapon).damage_type) || undefined,
+      armorClass: (selectedItem as Open5eArmor).armor_class ?? undefined,
+      armorCategory: toDisplayString((selectedItem as Open5eArmor).armor_category) || undefined,
       properties: selectedItem.properties || [],
     };
 
@@ -452,34 +528,27 @@ function AddItemDialog({
         </DialogHeader>
 
         {/* Tab Selector */}
-        <div className="flex gap-2 mb-4">
-          <button
-            type="button"
-            onClick={() => setActiveTab('database')}
-            className={cn(
-              'flex-1 py-2 px-4 rounded-lg font-medium transition-colors',
-              activeTab === 'database'
-                ? 'bg-amber-100 text-amber-900 border-2 border-amber-300'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            )}
-          >
-            From Database
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('custom')}
-            className={cn(
-              'flex-1 py-2 px-4 rounded-lg font-medium transition-colors',
-              activeTab === 'custom'
-                ? 'bg-amber-100 text-amber-900 border-2 border-amber-300'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            )}
-          >
-            Custom Item
-          </button>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {(['weapons', 'armor', 'items', 'magicItems', 'custom'] as const).map((tab) => (
+            <button
+              key={tab}
+              type="button"
+              onClick={() => setActiveTab(tab)}
+              className={cn(
+                'py-2 px-3 rounded-lg font-medium text-sm transition-colors',
+                activeTab === tab
+                  ? 'bg-amber-100 text-amber-900 border-2 border-amber-300'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              )}
+            >
+              {tab === 'custom'
+                ? 'Custom Item'
+                : tab.charAt(0).toUpperCase() + tab.slice(1).replace('magicItems', 'Magic Items')}
+            </button>
+          ))}
         </div>
 
-        {activeTab === 'database' ? (
+        {activeTab !== 'custom' ? (
           <div className="flex-1 overflow-hidden flex flex-col min-h-[400px]">
             {/* Search */}
             <div className="relative mb-3">
@@ -495,34 +564,61 @@ function AddItemDialog({
               />
             </div>
 
+            {/* Error state */}
+            {isErrorCurrent && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800 mb-3">
+                Failed to load {activeTab}. {errorCurrent?.message}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => refetchCurrent()}
+                >
+                  Retry
+                </Button>
+              </div>
+            )}
+
             {/* Results */}
             <Command className="flex-1 border rounded-lg overflow-hidden">
               <CommandList className="max-h-none">
-                <CommandEmpty>{isLoading ? 'Loading items...' : 'No items found.'}</CommandEmpty>
+                <CommandEmpty>
+                  {isLoadingCurrent ? 'Loading items...' : 'No items found.'}
+                </CommandEmpty>
                 <CommandGroup>
-                  {filteredItems.map((item) => (
-                    <CommandItem
-                      key={item.key}
-                      value={item.key}
-                      onSelect={() => setSelectedItem(item)}
-                      className={cn(
-                        'cursor-pointer',
-                        selectedItem?.key === item.key && 'bg-amber-100'
-                      )}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <div>
-                          <span className="font-medium">{item.name}</span>
-                          <span className="text-sm text-gray-500 ml-2">
-                            {item.category || item.type}
-                          </span>
-                        </div>
-                        {selectedItem?.key === item.key && (
-                          <Check className="w-4 h-4 text-amber-600" />
+                  {filteredItems.map((item) => {
+                    const essentials = getItemEssentials(item);
+                    return (
+                      <CommandItem
+                        key={item.key}
+                        value={item.key}
+                        onSelect={() => setSelectedItem(item)}
+                        className={cn(
+                          'cursor-pointer py-2',
+                          selectedItem?.key === item.key && 'bg-amber-100'
                         )}
-                      </div>
-                    </CommandItem>
-                  ))}
+                      >
+                        <div className="flex items-start justify-between w-full gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium">{item.name}</span>
+                              <span className="text-sm text-gray-500">
+                                {toDisplayString(item.category) || toDisplayString(item.type)}
+                              </span>
+                            </div>
+                            {essentials && (
+                              <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">
+                                {essentials}
+                              </p>
+                            )}
+                          </div>
+                          {selectedItem?.key === item.key && (
+                            <Check className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                          )}
+                        </div>
+                      </CommandItem>
+                    );
+                  })}
                 </CommandGroup>
               </CommandList>
             </Command>
@@ -724,7 +820,8 @@ function EquippedItemsSection({
     const parts: string[] = [];
 
     if (item.damageDice) {
-      parts.push(`${item.damageDice}${item.damageType ? ` ${item.damageType}` : ''}`);
+      const dt = toDisplayString(item.damageType);
+      parts.push(`${item.damageDice}${dt ? ` ${dt}` : ''}`);
     }
     if (item.armorClass) {
       parts.push(`AC ${item.armorClass}`);
@@ -749,10 +846,10 @@ function EquippedItemsSection({
         <div key={item.id} className="p-2 bg-emerald-50 border border-emerald-300 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {item.category?.toLowerCase().includes('weapon') ? (
+              {toDisplayString(item.category).toLowerCase().includes('weapon') ? (
                 <Sword className="w-4 h-4 text-emerald-600" />
-              ) : item.category?.toLowerCase().includes('armor') ||
-                item.category?.toLowerCase().includes('shield') ? (
+              ) : toDisplayString(item.category).toLowerCase().includes('armor') ||
+                toDisplayString(item.category).toLowerCase().includes('shield') ? (
                 <Shield className="w-4 h-4 text-emerald-600" />
               ) : (
                 <Sparkles className="w-4 h-4 text-emerald-600" />
@@ -791,14 +888,6 @@ export function EquipmentPanel({
     equipped: true,
     inventory: true,
   });
-
-  const { data: equipmentData, isLoading: isLoadingEquipment } = useEquipment(documentKeys);
-
-  const availableItems: Open5eItem[] = useMemo(() => {
-    if (!equipmentData) return [];
-    const { weapons, armor, items, magicItems } = equipmentData;
-    return [...weapons, ...armor, ...items, ...magicItems];
-  }, [equipmentData]);
 
   const equippedItems = inventory.filter((item) => item.equipped);
   const backpackItems = inventory.filter((item) => !item.equipped);
@@ -960,14 +1049,15 @@ export function EquipmentPanel({
           Add Item
         </Button>
 
-        {/* Add Item Dialog */}
-        <AddItemDialog
-          open={showAddDialog}
-          onOpenChange={setShowAddDialog}
-          onAddItem={handleAddItem}
-          availableItems={availableItems}
-          isLoading={isLoadingEquipment}
-        />
+        {/* Add Item Dialog - only mount when open to avoid lag from query hooks */}
+        {showAddDialog && (
+          <AddItemDialog
+            open={showAddDialog}
+            onOpenChange={setShowAddDialog}
+            onAddItem={handleAddItem}
+            documentKeys={documentKeys}
+          />
+        )}
       </div>
     </TooltipProvider>
   );
