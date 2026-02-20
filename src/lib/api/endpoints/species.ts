@@ -10,8 +10,8 @@ import type { Open5eRace } from '@/types/open5e';
 import { open5eClient } from '../client';
 import { CACHE_TTL } from '@/lib/db/schema';
 
-/** API endpoint path for races/species */
-const ENDPOINT = 'races';
+/** API endpoint path for species (Open5E v2 uses "species", not "races") */
+const ENDPOINT = 'species';
 
 /**
  * Fetch species for a specific document.

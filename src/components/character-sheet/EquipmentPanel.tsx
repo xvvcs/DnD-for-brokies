@@ -15,8 +15,9 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 
+import { useWeapons, useArmor, useItems, useMagicItems, useEquipment } from '@/hooks/api/useOpen5e';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -46,6 +47,53 @@ import {
 } from 'lucide-react';
 import type { EquipmentItem, Currency } from '@/types/game';
 import type { Open5eItem, Open5eWeapon, Open5eArmor } from '@/types/open5e';
+
+/** Open5E v2 API may return { name, key, url } objects instead of strings. Extract display string. */
+function toDisplayString(val: unknown): string {
+  if (typeof val === 'string') return val;
+  if (val && typeof val === 'object' && 'name' in val)
+    return String((val as { name: string }).name);
+  return '';
+}
+
+function getPropertyName(prop: unknown): string {
+  if (typeof prop === 'string') return prop;
+  if (prop && typeof prop === 'object') {
+    if ('property' in prop) {
+      const inner = (prop as Record<string, unknown>).property;
+      if (inner && typeof inner === 'object' && 'name' in inner) {
+        return String(inner.name);
+      }
+    }
+    if ('name' in prop) return String((prop as Record<string, unknown>).name);
+  }
+  return '';
+}
+
+/** Extract brief essentials from an Open5E item for list display. */
+function getItemEssentials(item: Open5eItem): string {
+  const parts: string[] = [];
+  const weapon = item as Open5eWeapon;
+  const armor = item as Open5eArmor;
+
+  if (weapon.damage_dice && weapon.damage_type) {
+    parts.push(`${weapon.damage_dice} ${toDisplayString(weapon.damage_type)}`);
+  }
+  if (armor.armor_class != null) {
+    parts.push(`AC ${armor.armor_class}`);
+  }
+  if (item.properties && item.properties.length > 0) {
+    parts.push(item.properties.map(getPropertyName).filter(Boolean).slice(0, 3).join(', '));
+  }
+  if (parts.length > 0) return parts.join(' • ');
+
+  // Fallback: first sentence of description, max ~80 chars
+  const descRaw = (item as unknown as Record<string, unknown>).desc || item.description || '';
+  const desc = String(descRaw).trim();
+  if (!desc) return '';
+  const firstSentence = desc.split(/[.!?]/)[0]?.trim() ?? '';
+  return firstSentence.length > 80 ? `${firstSentence.slice(0, 77)}...` : firstSentence;
+}
 
 // Extended EquipmentItem with additional fields for the UI
 interface ExtendedEquipmentItem extends EquipmentItem {
@@ -168,6 +216,9 @@ function CurrencyTracker({
   );
 }
 
+const MIN_ITEM_QUANTITY = 1;
+const MAX_ITEM_QUANTITY = 9999;
+
 // Item card component
 function ItemCard({
   item,
@@ -185,11 +236,9 @@ function ItemCard({
   const [expanded, setExpanded] = useState(false);
 
   const getItemIcon = () => {
-    if (item.category?.toLowerCase().includes('weapon')) return <Sword className="w-4 h-4" />;
-    if (
-      item.category?.toLowerCase().includes('armor') ||
-      item.category?.toLowerCase().includes('shield')
-    ) {
+    const cat = toDisplayString(item.category);
+    if (cat.toLowerCase().includes('weapon')) return <Sword className="w-4 h-4" />;
+    if (cat.toLowerCase().includes('armor') || cat.toLowerCase().includes('shield')) {
       return <Shield className="w-4 h-4" />;
     }
     return <Backpack className="w-4 h-4" />;
@@ -223,14 +272,14 @@ function ItemCard({
 
           {/* Item Details */}
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            {item.category && (
+            {toDisplayString(item.category) && (
               <Badge variant="outline" className="text-[10px] h-5">
-                {item.category}
+                {toDisplayString(item.category)}
               </Badge>
             )}
             {item.damageDice && (
               <Badge variant="outline" className="text-[10px] h-5 bg-red-50">
-                {item.damageDice} {item.damageType}
+                {item.damageDice} {toDisplayString(item.damageType)}
               </Badge>
             )}
             {item.armorClass && (
@@ -253,7 +302,9 @@ function ItemCard({
           <div className="flex items-center gap-1 mr-2">
             <button
               type="button"
-              onClick={() => onUpdateQuantity?.(item.id, Math.max(1, item.quantity - 1))}
+              onClick={() =>
+                onUpdateQuantity?.(item.id, Math.max(MIN_ITEM_QUANTITY, item.quantity - 1))
+              }
               className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 text-gray-600"
             >
               -
@@ -261,7 +312,9 @@ function ItemCard({
             <span className="text-sm font-bold w-6 text-center">{item.quantity}</span>
             <button
               type="button"
-              onClick={() => onUpdateQuantity?.(item.id, item.quantity + 1)}
+              onClick={() =>
+                onUpdateQuantity?.(item.id, Math.min(MAX_ITEM_QUANTITY, item.quantity + 1))
+              }
               className="w-6 h-6 flex items-center justify-center rounded hover:bg-gray-200 text-gray-600"
             >
               +
@@ -346,11 +399,15 @@ function ItemCard({
           <p className="text-sm text-gray-700 whitespace-pre-wrap">{item.description}</p>
           {item.properties && item.properties.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
-              {item.properties.map((prop) => (
-                <Badge key={prop} variant="secondary" className="text-[10px]">
-                  {prop}
-                </Badge>
-              ))}
+              {item.properties.map((prop, idx) => {
+                const propStr = getPropertyName(prop);
+                if (!propStr) return null;
+                return (
+                  <Badge key={`${propStr}-${idx}`} variant="secondary" className="text-[10px]">
+                    {propStr}
+                  </Badge>
+                );
+              })}
             </div>
           )}
         </div>
@@ -359,17 +416,19 @@ function ItemCard({
   );
 }
 
+type EquipmentTab = 'weapons' | 'armor' | 'items' | 'magicItems' | 'custom';
+
 // Add item dialog component
 function AddItemDialog({
   open,
   onOpenChange,
   onAddItem,
-  availableItems,
+  documentKeys,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAddItem: (item: Partial<ExtendedEquipmentItem>) => void;
-  availableItems: Open5eItem[];
+  documentKeys: string[];
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItem, setSelectedItem] = useState<Open5eItem | null>(null);
@@ -379,40 +438,146 @@ function AddItemDialog({
     category: 'Adventuring Gear',
     weight: '',
   });
-  const [activeTab, setActiveTab] = useState<'database' | 'custom'>('database');
+  const [activeTab, setActiveTab] = useState<EquipmentTab>('weapons');
+  const [visibleCount, setVisibleCount] = useState(50);
+
+  // We handle search term and tab resets without useEffect to avoid cascading renders
+  const handleSearchTermChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+    setSelectedItem(null);
+    setVisibleCount(50);
+  };
+
+  const handleTabChange = (tab: EquipmentTab) => {
+    setActiveTab(tab);
+    setSelectedItem(null);
+    setSearchTerm('');
+    setVisibleCount(50);
+  };
+
+  const weaponsQuery = useWeapons(documentKeys, {
+    enabled: open && activeTab === 'weapons' && documentKeys.length > 0,
+  });
+  const armorQuery = useArmor(documentKeys, {
+    enabled: open && activeTab === 'armor' && documentKeys.length > 0,
+  });
+  const itemsQuery = useItems(documentKeys, {
+    enabled: open && activeTab === 'items' && documentKeys.length > 0,
+  });
+  const magicItemsQuery = useMagicItems(documentKeys, {
+    enabled: open && activeTab === 'magicItems' && documentKeys.length > 0,
+  });
+
+  const currentQuery = (() => {
+    switch (activeTab) {
+      case 'weapons':
+        return weaponsQuery;
+      case 'armor':
+        return armorQuery;
+      case 'items':
+        return itemsQuery;
+      case 'magicItems':
+        return magicItemsQuery;
+      default:
+        return {
+          data: [] as Open5eItem[],
+          isLoading: false,
+          isError: false,
+          error: null,
+          refetch: () => Promise.resolve(),
+        };
+    }
+  })();
+  const availableItems = useMemo(() => {
+    const data = (currentQuery.data ?? []) as Open5eItem[];
+    const seen = new Set<string>();
+    return data.filter((item) => {
+      if (seen.has(item.key)) return false;
+      seen.add(item.key);
+      return true;
+    });
+  }, [currentQuery.data]);
+  const {
+    isLoading: isLoadingCurrent,
+    isError: isErrorCurrent,
+    error: errorCurrent,
+    refetch: refetchCurrent,
+  } = currentQuery;
 
   const filteredItems = useMemo(() => {
-    if (!searchTerm) return availableItems.slice(0, 50);
+    if (!searchTerm) return availableItems;
     const term = searchTerm.toLowerCase();
-    return availableItems
-      .filter(
-        (item) =>
-          item.name.toLowerCase().includes(term) ||
-          item.type?.toLowerCase().includes(term) ||
-          item.category?.toLowerCase().includes(term)
-      )
-      .slice(0, 50);
+    return availableItems.filter(
+      (item) =>
+        item.name.toLowerCase().includes(term) ||
+        toDisplayString(item.type).toLowerCase().includes(term) ||
+        toDisplayString(item.category).toLowerCase().includes(term)
+    );
   }, [searchTerm, availableItems]);
+
+  const visibleItems = useMemo(
+    () => filteredItems.slice(0, visibleCount),
+    [filteredItems, visibleCount]
+  );
+
+  // Infinite scroll observer
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting) {
+        setVisibleCount((prev) => {
+          if (prev < filteredItems.length) {
+            return Math.min(prev + 50, filteredItems.length);
+          }
+          return prev;
+        });
+      }
+    },
+    [filteredItems.length]
+  );
+
+  useEffect(() => {
+    const element = observerTarget.current;
+    if (!element) return;
+
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: '100px',
+      threshold: 0.1,
+    });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   const handleAddFromDatabase = () => {
     if (!selectedItem) return;
+
+    const descRaw =
+      (selectedItem as unknown as Record<string, unknown>).desc || selectedItem.description || '';
+    const description = String(descRaw).trim();
+    const properties = selectedItem.properties
+      ? selectedItem.properties.map(getPropertyName).filter(Boolean)
+      : [];
 
     const newItem: Partial<ExtendedEquipmentItem> = {
       name: selectedItem.name,
       quantity: 1,
       equipped: false,
       itemKey: selectedItem.key,
-      description: selectedItem.description,
+      description: description,
       weight: selectedItem.weight || undefined,
       cost: selectedItem.cost,
-      category: selectedItem.category || selectedItem.type,
-      isMagicItem: selectedItem.type?.toLowerCase().includes('magic'),
-      requiresAttunement: selectedItem.description?.toLowerCase().includes('requires attunement'),
+      category: toDisplayString(selectedItem.category || selectedItem.type) || undefined,
+      isMagicItem: toDisplayString(selectedItem.type).toLowerCase().includes('magic'),
+      requiresAttunement: description.toLowerCase().includes('requires attunement'),
       damageDice: (selectedItem as Open5eWeapon).damage_dice || undefined,
-      damageType: (selectedItem as Open5eWeapon).damage_type || undefined,
-      armorClass: (selectedItem as Open5eArmor).armor_class || undefined,
-      armorCategory: (selectedItem as Open5eArmor).armor_category || undefined,
-      properties: selectedItem.properties || [],
+      damageType: toDisplayString((selectedItem as Open5eWeapon).damage_type) || undefined,
+      armorClass: (selectedItem as Open5eArmor).armor_class ?? undefined,
+      armorCategory: toDisplayString((selectedItem as Open5eArmor).armor_category) || undefined,
+      properties,
     };
 
     onAddItem(newItem);
@@ -449,77 +614,105 @@ function AddItemDialog({
         </DialogHeader>
 
         {/* Tab Selector */}
-        <div className="flex gap-2 mb-4">
-          <button
-            type="button"
-            onClick={() => setActiveTab('database')}
-            className={cn(
-              'flex-1 py-2 px-4 rounded-lg font-medium transition-colors',
-              activeTab === 'database'
-                ? 'bg-amber-100 text-amber-900 border-2 border-amber-300'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            )}
-          >
-            From Database
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('custom')}
-            className={cn(
-              'flex-1 py-2 px-4 rounded-lg font-medium transition-colors',
-              activeTab === 'custom'
-                ? 'bg-amber-100 text-amber-900 border-2 border-amber-300'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-            )}
-          >
-            Custom Item
-          </button>
+        <div className="flex flex-wrap gap-2 mb-4">
+          {(['weapons', 'armor', 'items', 'magicItems', 'custom'] as const).map((tab) => {
+            const tabLabel: Record<EquipmentTab, string> = {
+              weapons: 'Weapons',
+              armor: 'Armor',
+              items: 'Items',
+              magicItems: 'Magic Items',
+              custom: 'Custom Item',
+            };
+            return (
+              <button
+                key={tab}
+                type="button"
+                onClick={() => handleTabChange(tab)}
+                className={cn(
+                  'py-2 px-3 rounded-lg font-medium text-sm transition-colors',
+                  activeTab === tab
+                    ? 'bg-amber-100 text-amber-900 border-2 border-amber-300'
+                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                )}
+              >
+                {tabLabel[tab]}
+              </button>
+            );
+          })}
         </div>
 
-        {activeTab === 'database' ? (
+        {activeTab !== 'custom' ? (
           <div className="flex-1 overflow-hidden flex flex-col min-h-[400px]">
             {/* Search */}
             <div className="relative mb-3">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
               <Input
                 value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setSelectedItem(null);
-                }}
+                onChange={handleSearchTermChange}
                 placeholder="Search items by name, type, or category..."
                 className="pl-9"
               />
             </div>
 
+            {/* Error state */}
+            {isErrorCurrent && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800 mb-3">
+                Failed to load {activeTab}. {errorCurrent?.message}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-2"
+                  onClick={() => refetchCurrent()}
+                >
+                  Retry
+                </Button>
+              </div>
+            )}
+
             {/* Results */}
             <Command className="flex-1 border rounded-lg overflow-hidden">
               <CommandList className="max-h-none">
-                <CommandEmpty>No items found.</CommandEmpty>
+                <CommandEmpty>
+                  {isLoadingCurrent ? 'Loading items...' : 'No items found.'}
+                </CommandEmpty>
                 <CommandGroup>
-                  {filteredItems.map((item) => (
-                    <CommandItem
-                      key={item.key}
-                      value={item.key}
-                      onSelect={() => setSelectedItem(item)}
-                      className={cn(
-                        'cursor-pointer',
-                        selectedItem?.key === item.key && 'bg-amber-100'
-                      )}
-                    >
-                      <div className="flex items-center justify-between w-full">
-                        <div>
-                          <span className="font-medium">{item.name}</span>
-                          <span className="text-sm text-gray-500 ml-2">
-                            {item.category || item.type}
-                          </span>
-                        </div>
-                        {selectedItem?.key === item.key && (
-                          <Check className="w-4 h-4 text-amber-600" />
+                  {visibleItems.map((item) => {
+                    const essentials = getItemEssentials(item);
+                    return (
+                      <CommandItem
+                        key={item.key}
+                        value={item.key}
+                        onSelect={() => setSelectedItem(item)}
+                        className={cn(
+                          'cursor-pointer py-2',
+                          selectedItem?.key === item.key && 'bg-amber-100'
                         )}
-                      </div>
-                    </CommandItem>
-                  ))}
+                      >
+                        <div className="flex items-start justify-between w-full gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <span className="font-medium">{item.name}</span>
+                              <span className="text-sm text-gray-500">
+                                {toDisplayString(item.category) || toDisplayString(item.type)}
+                              </span>
+                            </div>
+                            {essentials && (
+                              <p className="text-xs text-gray-600 mt-0.5 line-clamp-2">
+                                {essentials}
+                              </p>
+                            )}
+                          </div>
+                          {selectedItem?.key === item.key && (
+                            <Check className="w-4 h-4 shrink-0 text-amber-600 mt-0.5" />
+                          )}
+                        </div>
+                      </CommandItem>
+                    );
+                  })}
+                  {/* Invisible div for intersection observer to trigger loading more items */}
+                  {visibleCount < filteredItems.length && (
+                    <div ref={observerTarget} className="h-4 w-full" />
+                  )}
                 </CommandGroup>
               </CommandList>
             </Command>
@@ -529,7 +722,11 @@ function AddItemDialog({
               <div className="mt-3 p-3 bg-amber-50 border border-amber-300 rounded-lg">
                 <h4 className="font-bold text-amber-900">{selectedItem.name}</h4>
                 <p className="text-sm text-gray-600 mt-1 line-clamp-3">
-                  {selectedItem.description}
+                  {String(
+                    (selectedItem as unknown as Record<string, unknown>).desc ||
+                      selectedItem.description ||
+                      ''
+                  ).trim()}
                 </p>
                 <div className="flex gap-2 mt-2 text-xs text-gray-500">
                   {selectedItem.cost && <span>Cost: {selectedItem.cost}</span>}
@@ -557,6 +754,7 @@ function AddItemDialog({
                 onChange={(e) => setCustomItem({ ...customItem, name: e.target.value })}
                 placeholder="Enter item name..."
                 className="mt-1"
+                maxLength={100}
               />
             </div>
 
@@ -567,6 +765,7 @@ function AddItemDialog({
                 onChange={(e) => setCustomItem({ ...customItem, category: e.target.value })}
                 placeholder="e.g., Adventuring Gear, Tool, etc."
                 className="mt-1"
+                maxLength={50}
               />
             </div>
 
@@ -577,6 +776,7 @@ function AddItemDialog({
                 onChange={(e) => setCustomItem({ ...customItem, weight: e.target.value })}
                 placeholder="e.g., 2 lb."
                 className="mt-1"
+                maxLength={20}
               />
             </div>
 
@@ -587,6 +787,7 @@ function AddItemDialog({
                 onChange={(e) => setCustomItem({ ...customItem, description: e.target.value })}
                 placeholder="Enter item description..."
                 rows={4}
+                maxLength={2000}
                 className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
               />
             </div>
@@ -721,13 +922,14 @@ function EquippedItemsSection({
     const parts: string[] = [];
 
     if (item.damageDice) {
-      parts.push(`${item.damageDice}${item.damageType ? ` ${item.damageType}` : ''}`);
+      const dt = toDisplayString(item.damageType);
+      parts.push(`${item.damageDice}${dt ? ` ${dt}` : ''}`);
     }
     if (item.armorClass) {
       parts.push(`AC ${item.armorClass}`);
     }
     if (item.properties && item.properties.length > 0) {
-      parts.push(item.properties.join(', '));
+      parts.push(item.properties.map(getPropertyName).filter(Boolean).join(', '));
     }
 
     return (
@@ -746,10 +948,10 @@ function EquippedItemsSection({
         <div key={item.id} className="p-2 bg-emerald-50 border border-emerald-300 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              {item.category?.toLowerCase().includes('weapon') ? (
+              {toDisplayString(item.category).toLowerCase().includes('weapon') ? (
                 <Sword className="w-4 h-4 text-emerald-600" />
-              ) : item.category?.toLowerCase().includes('armor') ||
-                item.category?.toLowerCase().includes('shield') ? (
+              ) : toDisplayString(item.category).toLowerCase().includes('armor') ||
+                toDisplayString(item.category).toLowerCase().includes('shield') ? (
                 <Shield className="w-4 h-4 text-emerald-600" />
               ) : (
                 <Sparkles className="w-4 h-4 text-emerald-600" />
@@ -776,7 +978,6 @@ function EquippedItemsSection({
 export function EquipmentPanel({
   inventory,
   currency,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   documentKeys,
   onInventoryChange,
   onCurrencyChange,
@@ -790,20 +991,23 @@ export function EquipmentPanel({
     inventory: true,
   });
 
-  // TODO: In a full implementation, fetch available items from Open5E API
-  // For now, we'll use an empty array as placeholder
-  const availableItems: Open5eItem[] = [];
+  // Prefetch all equipment in the background to warm up IndexedDB cache
+  // This makes opening the Add Item dialog feel instantaneous for subsequent uses
+  useEquipment(documentKeys, {
+    enabled: documentKeys.length > 0,
+    staleTime: 60 * 60 * 1000,
+  });
 
   const equippedItems = inventory.filter((item) => item.equipped);
   const backpackItems = inventory.filter((item) => !item.equipped);
 
   const handleAddItem = (newItem: Partial<ExtendedEquipmentItem>) => {
     const item: ExtendedEquipmentItem = {
-      id: `item-${Date.now()}`,
+      ...newItem,
+      id: crypto.randomUUID(),
       name: newItem.name || 'Unknown Item',
       quantity: newItem.quantity || 1,
       equipped: newItem.equipped || false,
-      ...newItem,
     };
 
     onInventoryChange?.([...inventory, item]);
@@ -829,7 +1033,10 @@ export function EquipmentPanel({
   };
 
   const handleUpdateQuantity = (id: string, quantity: number) => {
-    const updated = inventory.map((item) => (item.id === id ? { ...item, quantity } : item));
+    const capped = Math.min(Math.max(MIN_ITEM_QUANTITY, quantity), MAX_ITEM_QUANTITY);
+    const updated = inventory.map((item) =>
+      item.id === id ? { ...item, quantity: capped } : item
+    );
     onInventoryChange?.(updated);
   };
 
@@ -954,13 +1161,15 @@ export function EquipmentPanel({
           Add Item
         </Button>
 
-        {/* Add Item Dialog */}
-        <AddItemDialog
-          open={showAddDialog}
-          onOpenChange={setShowAddDialog}
-          onAddItem={handleAddItem}
-          availableItems={availableItems}
-        />
+        {/* Add Item Dialog - only mount when open to avoid lag from query hooks */}
+        {showAddDialog && (
+          <AddItemDialog
+            open={showAddDialog}
+            onOpenChange={setShowAddDialog}
+            onAddItem={handleAddItem}
+            documentKeys={documentKeys}
+          />
+        )}
       </div>
     </TooltipProvider>
   );

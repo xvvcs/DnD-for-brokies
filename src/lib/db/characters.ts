@@ -176,21 +176,25 @@ export async function updateCharacter(
  * @returns True if deleted, false if not found
  */
 export async function deleteCharacter(id: string): Promise<boolean> {
-  // Check if character exists
-  const existing = await db.characters.get(id);
-  if (!existing) return false;
+  let deleted = false;
 
-  // Remove from associated campaigns
-  await db.campaigns
-    .where('characterIds')
-    .equals(id)
-    .modify((campaign) => {
-      campaign.characterIds = campaign.characterIds.filter((cid: string) => cid !== id);
-    });
+  // Existence check and deletion are inside the same transaction to avoid TOCTOU
+  await db.transaction('rw', db.characters, db.campaigns, async () => {
+    const existing = await db.characters.get(id);
+    if (!existing) return; // leaves `deleted` as false, signaling not found
 
-  // Delete the character
-  await db.characters.delete(id);
-  return true;
+    const campaigns = await db.campaigns.toArray();
+    for (const campaign of campaigns) {
+      if (campaign.characterIds?.includes(id)) {
+        campaign.characterIds = campaign.characterIds.filter((cid: string) => cid !== id);
+        await db.campaigns.put(campaign);
+      }
+    }
+    await db.characters.delete(id);
+    deleted = true;
+  });
+
+  return deleted;
 }
 
 /**
@@ -228,12 +232,10 @@ export async function duplicateCharacter(id: string, newName?: string): Promise<
 export async function deleteCharacters(ids: string[]): Promise<number> {
   let deletedCount = 0;
 
-  await db.transaction('rw', db.characters, db.campaigns, async () => {
-    for (const id of ids) {
-      const deleted = await deleteCharacter(id);
-      if (deleted) deletedCount++;
-    }
-  });
+  for (const id of ids) {
+    const deleted = await deleteCharacter(id);
+    if (deleted) deletedCount++;
+  }
 
   return deletedCount;
 }
