@@ -10,5 +10,6 @@ export * from './classes';
 export * from './species';
 export * from './backgrounds';
 export * from './spells';
+export * from './feats';
 export * from './equipment';
 export * from './reference';

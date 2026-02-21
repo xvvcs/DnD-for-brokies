@@ -21,6 +21,9 @@ export {
   // Background hooks
   useBackgrounds,
 
+  // Feat hooks
+  useFeats,
+
   // Spell hooks
   useSpells,
 

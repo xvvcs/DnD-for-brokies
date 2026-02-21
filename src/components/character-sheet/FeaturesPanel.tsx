@@ -34,11 +34,22 @@ import {
   Zap,
   Minus,
   RotateCcw,
+  Search,
 } from 'lucide-react';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { useFeats } from '@/hooks/api/useOpen5e';
+import type { Open5eFeat } from '@/types/open5e';
 import type { CharacterFeature } from '@/types/game';
 
 interface FeaturesPanelProps {
   features: CharacterFeature[];
+  documentKeys: string[];
   onFeatureUse?: (featureId: string) => void;
   onFeatureReset?: (featureId: string, resetType?: 'short' | 'long' | 'all') => void;
   onAddFeature?: (feature: CharacterFeature) => void;
@@ -288,11 +299,15 @@ function AddFeatureDialog({
   open,
   onOpenChange,
   onAdd,
+  documentKeys,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onAdd: (feature: Omit<CharacterFeature, 'id'>) => void;
+  documentKeys: string[];
 }) {
+  const [activeTab, setActiveTab] = React.useState<'custom' | 'srd'>('custom');
+
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [source, setSource] = useState('custom');
@@ -301,6 +316,68 @@ function AddFeatureDialog({
   const [hasLimitedUses, setHasLimitedUses] = useState(false);
   const [maxUses, setMaxUses] = useState('1');
   const [resetOn, setResetOn] = useState<'short' | 'long' | 'dawn' | 'other'>('short');
+
+  // SRD Feat state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [visibleCount, setVisibleCount] = useState(50);
+
+  const { data: allFeats = [], isLoading, isError, refetch } = useFeats(documentKeys);
+
+  const filteredFeats = useMemo(() => {
+    if (!searchTerm) return allFeats;
+    const term = searchTerm.toLowerCase();
+    return allFeats.filter((f) => f.name.toLowerCase().includes(term));
+  }, [allFeats, searchTerm]);
+
+  const visibleFeats = useMemo(
+    () => filteredFeats.slice(0, visibleCount),
+    [filteredFeats, visibleCount]
+  );
+
+  const observerTarget = React.useRef<HTMLDivElement>(null);
+
+  const handleObserver = React.useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting) {
+        setVisibleCount((prev) => Math.min(prev + 50, filteredFeats.length));
+      }
+    },
+    [filteredFeats.length]
+  );
+
+  React.useEffect(() => {
+    const element = observerTarget.current;
+    if (!element) return;
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: '100px',
+      threshold: 0.1,
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [handleObserver]);
+
+  const handleAddSrdFeat = (feat: Open5eFeat) => {
+    let fullDesc = feat.desc;
+    if (feat.prerequisite || feat.has_prerequisite) {
+      fullDesc = `Prerequisite: ${feat.prerequisite || 'Yes'}\n\n${fullDesc}`;
+    }
+    if (feat.benefits && feat.benefits.length > 0) {
+      const benefitsList = feat.benefits.map((b) => `• ${b.desc}`).join('\n');
+      fullDesc += `\n\nBenefits:\n${benefitsList}`;
+    }
+
+    const feature: Omit<CharacterFeature, 'id'> = {
+      name: feat.name,
+      description: fullDesc,
+      source: `Feat: ${feat.name}`,
+      sourceKey: feat.key,
+    };
+    onAdd(feature);
+    setSearchTerm('');
+    onOpenChange(false);
+  };
 
   const sourceOptions = [
     { value: 'class', label: 'Class Feature', placeholder: 'e.g., Fighter' },
@@ -351,129 +428,221 @@ function AddFeatureDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Plus className="w-5 h-5" />
-            Add Custom Feature
+            Add Feature
           </DialogTitle>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {/* Feature Name */}
-          <div>
-            <label className="text-sm font-medium text-gray-700">
-              Feature Name <span className="text-red-500">*</span>
-            </label>
-            <Input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Action Surge"
-              className="mt-1"
-              required
-            />
-          </div>
+        <div className="flex gap-2 mb-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab('custom')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium rounded-md transition-colors flex-1',
+              activeTab === 'custom'
+                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            )}
+          >
+            Custom Feature
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('srd')}
+            className={cn(
+              'px-4 py-2 text-sm font-medium rounded-md transition-colors flex-1',
+              activeTab === 'srd'
+                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            )}
+          >
+            Add from SRD (Feats)
+          </button>
+        </div>
 
-          {/* Source Type & Name */}
-          <div className="grid grid-cols-2 gap-3">
+        {activeTab === 'custom' ? (
+          <form onSubmit={handleSubmit} className="space-y-4 mt-2">
+            {/* Feature Name */}
             <div>
-              <label className="text-sm font-medium text-gray-700">Source Type</label>
-              <select
-                value={source}
-                onChange={(e) => setSource(e.target.value)}
-                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                {sourceOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-gray-700">Source Name</label>
+              <label className="text-sm font-medium text-gray-700">
+                Feature Name <span className="text-red-500">*</span>
+              </label>
               <Input
-                value={sourceName}
-                onChange={(e) => setSourceName(e.target.value)}
-                placeholder={currentSource?.placeholder}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g., Action Surge"
                 className="mt-1"
+                required
               />
             </div>
-          </div>
 
-          {/* Level (for class features) */}
-          {source === 'class' && (
-            <div>
-              <label className="text-sm font-medium text-gray-700">Level Gained</label>
-              <Input
-                type="number"
-                min="1"
-                max="20"
-                value={level}
-                onChange={(e) => setLevel(e.target.value)}
-                placeholder="e.g., 2"
-                className="mt-1"
-              />
-            </div>
-          )}
-
-          {/* Limited Use Toggle */}
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="limited-use"
-              checked={hasLimitedUses}
-              onChange={(e) => setHasLimitedUses(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
-            />
-            <label htmlFor="limited-use" className="text-sm font-medium text-gray-700">
-              Limited Uses (e.g., Rage, Second Wind)
-            </label>
-          </div>
-
-          {/* Limited Use Options */}
-          {hasLimitedUses && (
-            <div className="grid grid-cols-2 gap-3 p-3 bg-amber-50 rounded-lg">
+            {/* Source Type & Name */}
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium text-gray-700">Max Uses</label>
+                <label className="text-sm font-medium text-gray-700">Source Type</label>
+                <select
+                  value={source}
+                  onChange={(e) => setSource(e.target.value)}
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  {sourceOptions.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700">Source Name</label>
                 <Input
-                  type="number"
-                  min="1"
-                  value={maxUses}
-                  onChange={(e) => setMaxUses(e.target.value)}
+                  value={sourceName}
+                  onChange={(e) => setSourceName(e.target.value)}
+                  placeholder={currentSource?.placeholder}
                   className="mt-1"
                 />
               </div>
-              <div>
-                <label className="text-sm font-medium text-gray-700">Reset On</label>
-                <select
-                  value={resetOn}
-                  onChange={(e) => setResetOn(e.target.value as typeof resetOn)}
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-                >
-                  <option value="short">Short Rest</option>
-                  <option value="long">Long Rest</option>
-                  <option value="dawn">At Dawn</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
             </div>
-          )}
 
-          {/* Description */}
-          <div>
-            <label className="text-sm font-medium text-gray-700">Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter feature description..."
-              rows={4}
-              className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
-            />
+            {/* Level (for class features) */}
+            {source === 'class' && (
+              <div>
+                <label className="text-sm font-medium text-gray-700">Level Gained</label>
+                <Input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={level}
+                  onChange={(e) => setLevel(e.target.value)}
+                  placeholder="e.g., 2"
+                  className="mt-1"
+                />
+              </div>
+            )}
+
+            {/* Limited Use Toggle */}
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="limited-use"
+                checked={hasLimitedUses}
+                onChange={(e) => setHasLimitedUses(e.target.checked)}
+                className="w-4 h-4 rounded border-gray-300 text-amber-600 focus:ring-amber-500"
+              />
+              <label htmlFor="limited-use" className="text-sm font-medium text-gray-700">
+                Limited Uses (e.g., Rage, Second Wind)
+              </label>
+            </div>
+
+            {/* Limited Use Options */}
+            {hasLimitedUses && (
+              <div className="grid grid-cols-2 gap-3 p-3 bg-amber-50 rounded-lg">
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Max Uses</label>
+                  <Input
+                    type="number"
+                    min="1"
+                    value={maxUses}
+                    onChange={(e) => setMaxUses(e.target.value)}
+                    className="mt-1"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-700">Reset On</label>
+                  <select
+                    value={resetOn}
+                    onChange={(e) => setResetOn(e.target.value as typeof resetOn)}
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  >
+                    <option value="short">Short Rest</option>
+                    <option value="long">Long Rest</option>
+                    <option value="dawn">At Dawn</option>
+                    <option value="other">Other</option>
+                  </select>
+                </div>
+              </div>
+            )}
+
+            {/* Description */}
+            <div>
+              <label className="text-sm font-medium text-gray-700">Description</label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter feature description..."
+                rows={4}
+                className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              />
+            </div>
+
+            {/* Submit Button */}
+            <Button type="submit" disabled={!name.trim()} className="w-full">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Feature
+            </Button>
+          </form>
+        ) : (
+          <div className="flex flex-col h-[500px] mt-2">
+            <div className="relative mb-3 shrink-0">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setVisibleCount(50);
+                }}
+                placeholder="Search feats..."
+                className="pl-9 border-amber-300"
+              />
+            </div>
+
+            {isError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800 mb-3 shrink-0">
+                Failed to load feats.
+                <Button variant="outline" size="sm" className="mt-2 ml-2" onClick={() => refetch()}>
+                  Retry
+                </Button>
+              </div>
+            )}
+
+            <Command className="flex-1 border border-amber-200 rounded-lg overflow-hidden">
+              <CommandList className="max-h-full">
+                <CommandEmpty>{isLoading ? 'Loading feats...' : 'No feats found.'}</CommandEmpty>
+                <CommandGroup>
+                  {visibleFeats.map((feat) => (
+                    <CommandItem
+                      key={feat.key}
+                      value={feat.key}
+                      className="py-2 px-3 border-b border-gray-50 last:border-0 hover:bg-amber-50"
+                    >
+                      <div className="flex items-center justify-between w-full gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium text-amber-900">{feat.name}</div>
+                          {feat.prerequisite && (
+                            <div className="text-xs text-amber-700 mt-0.5">
+                              Prerequisite: {feat.prerequisite}
+                            </div>
+                          )}
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          className="h-7 text-xs bg-amber-100 text-amber-700 hover:bg-amber-200 shrink-0"
+                          onClick={() => handleAddSrdFeat(feat)}
+                        >
+                          Add
+                        </Button>
+                      </div>
+                    </CommandItem>
+                  ))}
+                  {visibleCount < filteredFeats.length && (
+                    <div ref={observerTarget} className="h-10 flex items-center justify-center">
+                      <span className="text-xs text-gray-400">Loading more...</span>
+                    </div>
+                  )}
+                </CommandGroup>
+              </CommandList>
+            </Command>
           </div>
-
-          {/* Submit Button */}
-          <Button type="submit" disabled={!name.trim()} className="w-full">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Feature
-          </Button>
-        </form>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -482,6 +651,7 @@ function AddFeatureDialog({
 // Main FeaturesPanel Component
 export function FeaturesPanel({
   features,
+  documentKeys,
   onFeatureUse,
   onFeatureReset,
   onAddFeature,
@@ -643,6 +813,7 @@ export function FeaturesPanel({
           open={showAddDialog}
           onOpenChange={setShowAddDialog}
           onAdd={handleAddFeature}
+          documentKeys={documentKeys}
         />
       </div>
     </TooltipProvider>

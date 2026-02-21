@@ -20,6 +20,7 @@ import type {
   Open5eCondition,
   Open5eSkill,
   Open5eLanguage,
+  Open5eFeat,
 } from '@/types/open5e';
 import type { SpellFilters } from '@/lib/api/endpoints/spells';
 import {
@@ -28,6 +29,7 @@ import {
   fetchSpecies,
   fetchBackgrounds,
   fetchSpells,
+  fetchFeats,
   fetchWeapons,
   fetchArmor,
   fetchItems,
@@ -53,6 +55,8 @@ export const queryKeys = {
   singleSpecies: (key: string) => ['species', key] as const,
   backgrounds: (documentKeys: string[]) => ['backgrounds', ...documentKeys.sort()] as const,
   background: (key: string) => ['background', key] as const,
+  feats: (documentKeys: string[]) => ['feats', ...documentKeys.sort()] as const,
+  feat: (key: string) => ['feat', key] as const,
   spells: (documentKeys: string[], filters?: SpellFilters) =>
     ['spells', ...documentKeys.sort(), JSON.stringify(filters)] as const,
   spell: (key: string) => ['spell', key] as const,
@@ -193,6 +197,29 @@ export function useSpells(
   return useQuery<Open5eSpell[]>({
     queryKey: queryKeys.spells(documentKeys, filters),
     queryFn: () => fetchSpells(documentKeys, filters),
+    enabled: documentKeys.length > 0,
+    staleTime: STALE_TIME,
+    gcTime: GC_TIME,
+    retry: 2,
+    retryDelay: RETRY_DELAY,
+    ...options,
+  });
+}
+
+// ============================================================================
+// Feats Hooks
+// ============================================================================
+
+/**
+ * Hook to fetch feats for selected documents
+ * @param documentKeys Array of document keys to fetch feats from
+ * @param options Optional query options
+ * @returns Query result with feats array
+ */
+export function useFeats(documentKeys: string[], options?: Partial<UseQueryOptions<Open5eFeat[]>>) {
+  return useQuery<Open5eFeat[]>({
+    queryKey: queryKeys.feats(documentKeys),
+    queryFn: () => fetchFeats(documentKeys),
     enabled: documentKeys.length > 0,
     staleTime: STALE_TIME,
     gcTime: GC_TIME,
@@ -546,6 +573,13 @@ export function useRefreshCache() {
     [refreshQuery]
   );
 
+  const refreshFeats = useCallback(
+    (documentKeys: string[]) => {
+      return refreshQuery(queryKeys.feats(documentKeys));
+    },
+    [refreshQuery]
+  );
+
   const refreshSpells = useCallback(
     (documentKeys: string[], filters?: SpellFilters) => {
       return refreshQuery(queryKeys.spells(documentKeys, filters));
@@ -564,6 +598,7 @@ export function useRefreshCache() {
     refreshSpecies,
     refreshBackgrounds,
     refreshSpells,
+    refreshFeats,
     refreshAll,
   };
 }
@@ -607,6 +642,13 @@ export function useClearCache() {
     [clearQuery]
   );
 
+  const clearFeats = useCallback(
+    (documentKeys: string[]) => {
+      clearQuery(queryKeys.feats(documentKeys));
+    },
+    [clearQuery]
+  );
+
   const clearSpells = useCallback(
     (documentKeys: string[], filters?: SpellFilters) => {
       clearQuery(queryKeys.spells(documentKeys, filters));
@@ -625,6 +667,7 @@ export function useClearCache() {
     clearSpecies,
     clearBackgrounds,
     clearSpells,
+    clearFeats,
     clearAll,
   };
 }

@@ -35,6 +35,7 @@ interface CombatActionsPanelProps {
   // Spellcasting props
   spellcasting?: Spellcasting | null;
   primaryClassKey?: string;
+  documentKeys: string[];
   onSpellSlotUse?: (level: SpellLevel, isUsed: boolean) => void;
   onSpellTogglePrepared?: (spellKey: string) => void;
   onAddSpell?: (spell: Open5eSpell) => void;
@@ -48,6 +49,7 @@ export function CombatActionsPanel({
   onUseAction,
   spellcasting,
   primaryClassKey = '',
+  documentKeys,
   onSpellSlotUse,
   onSpellTogglePrepared,
   onAddSpell,
@@ -109,6 +111,7 @@ export function CombatActionsPanel({
         <SpellcastingSection
           spellcasting={spellcasting}
           primaryClassKey={primaryClassKey}
+          documentKeys={documentKeys}
           onSpellSlotUse={onSpellSlotUse}
           onSpellTogglePrepared={onSpellTogglePrepared}
           onAddSpell={onAddSpell}

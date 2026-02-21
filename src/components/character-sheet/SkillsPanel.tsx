@@ -15,6 +15,7 @@ import { formatModifier } from '@/lib/engine/ability-scores';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronUp, Filter, Eye } from 'lucide-react';
+import { useSkills } from '@/hooks/api/useOpen5e';
 
 // Skill descriptions for tooltips
 const SKILL_DESCRIPTIONS: Record<string, string> = {
@@ -88,21 +89,21 @@ function calculateSkillModifier(
  * Individual skill row with proficiency toggle
  */
 function SkillRow({
-  skillKey,
   skillName,
   ability,
   abilityModifier,
   proficiencyLevel,
   proficiencyBonus,
   onProficiencyChange,
+  description,
 }: {
-  skillKey: string;
   skillName: string;
   ability: AbilityScore;
   abilityModifier: number;
   proficiencyLevel: ProficiencyLevel;
   proficiencyBonus: number;
   onProficiencyChange?: (level: ProficiencyLevel) => void;
+  description: string;
 }) {
   const modifier = calculateSkillModifier(abilityModifier, proficiencyLevel, proficiencyBonus);
 
@@ -200,7 +201,7 @@ function SkillRow({
           side="right"
           className="max-w-xs bg-amber-50 border-amber-300 text-amber-900 p-3"
         >
-          <p className="text-sm">{SKILL_DESCRIPTIONS[skillKey]}</p>
+          <p className="text-sm">{description}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
@@ -219,6 +220,21 @@ export function SkillsPanel({
 }: SkillsPanelProps) {
   const [filter, setFilter] = useState<FilterType>('all');
   const [isCollapsed, setIsCollapsed] = useState(false);
+
+  // OPEN5E_TODO: Use useSkills to fetch descriptions
+  const { data: open5eSkills, isLoading: isSkillsLoading, isError: isSkillsError } = useSkills();
+
+  const skillDescriptions = useMemo(() => {
+    if (!open5eSkills || isSkillsLoading || isSkillsError) return SKILL_DESCRIPTIONS;
+
+    const descriptions: Record<string, string> = { ...SKILL_DESCRIPTIONS };
+    for (const skill of open5eSkills) {
+      if (skill.description) {
+        descriptions[skill.key] = skill.description;
+      }
+    }
+    return descriptions;
+  }, [open5eSkills, isSkillsLoading, isSkillsError]);
 
   // Calculate Passive Perception
   const perceptionProficiency = skillProficiencies['perception'] ?? 'none';
@@ -335,7 +351,6 @@ export function SkillsPanel({
               filteredSkills.map((skill) => (
                 <SkillRow
                   key={skill.key}
-                  skillKey={skill.key}
                   skillName={skill.name}
                   ability={skill.ability}
                   abilityModifier={abilityModifiers[skill.ability]}
@@ -346,6 +361,7 @@ export function SkillsPanel({
                       ? (level) => onSkillProficiencyChange(skill.key, level)
                       : undefined
                   }
+                  description={skillDescriptions[skill.key] ?? SKILL_DESCRIPTIONS[skill.key] ?? ''}
                 />
               ))
             )}

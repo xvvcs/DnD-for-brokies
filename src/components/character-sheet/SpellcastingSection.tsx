@@ -7,12 +7,22 @@
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useEffect, useRef } from 'react';
 
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { useQuery } from '@tanstack/react-query';
+import { useSpells } from '@/hooks/api/useOpen5e';
+import { fetchSpell } from '@/lib/api/endpoints/spells';
 import {
   Sparkles,
   Trash2,
@@ -30,10 +40,12 @@ import type { Spellcasting, KnownSpell } from '@/types/character';
 import type { Open5eSpell } from '@/types/open5e';
 import { formatModifier } from '@/lib/engine/ability-scores';
 import { isPreparationCaster, isKnownSpellCaster } from '@/lib/engine/spellcasting';
+import { toOpen5eDisplayString } from '@/lib/utils';
 
 interface SpellcastingSectionProps {
   spellcasting: Spellcasting | null;
   primaryClassKey: string;
+  documentKeys: string[];
   onSpellSlotUse?: (level: SpellLevel, isUsed: boolean) => void;
   onSpellTogglePrepared?: (spellKey: string) => void;
   onAddSpell?: (spell: Open5eSpell) => void;
@@ -119,6 +131,17 @@ function SpellCard({
   const isCantrip = spell.level === 0;
   const showPreparedToggle = canTogglePrepared && !isCantrip;
 
+  const {
+    data: fullSpell,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ['spell', spell.spellKey],
+    queryFn: () => fetchSpell(spell.spellKey),
+    enabled: expanded,
+    staleTime: 60 * 60 * 1000, // 1 hour
+  });
+
   return (
     <div className="border border-purple-300 rounded p-2 bg-gradient-to-b from-purple-50 to-white">
       <div className="flex items-start justify-between gap-2">
@@ -139,7 +162,7 @@ function SpellCard({
             )}
 
             <span className="px-1.5 py-0.5 bg-amber-100 text-amber-700 text-[10px] font-medium rounded">
-              {spell.school}
+              {toOpen5eDisplayString(spell.school)}
             </span>
           </div>
 
@@ -186,16 +209,41 @@ function SpellCard({
 
       {expanded && (
         <div className="mt-2 pt-2 border-t border-purple-200 text-xs space-y-1">
-          <p className="text-gray-700">
-            <span className="font-medium text-purple-800">School:</span> {spell.school}
-          </p>
-          <p className="text-gray-700">
-            <span className="font-medium text-purple-800">Level:</span>{' '}
-            {isCantrip ? 'Cantrip' : `Level ${spell.level}`}
-          </p>
-          <p className="text-gray-500 italic text-[10px]">
-            Full spell details would be loaded from Open5E API
-          </p>
+          {isLoading ? (
+            <p className="text-gray-500 animate-pulse py-2">Loading spell details...</p>
+          ) : isError || !fullSpell ? (
+            <p className="text-red-500 italic py-2">Spell details unavailable offline</p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 mb-2">
+                <p className="text-gray-700">
+                  <span className="font-medium text-purple-800">Casting Time:</span>{' '}
+                  {toOpen5eDisplayString(fullSpell.casting_time)}
+                </p>
+                <p className="text-gray-700">
+                  <span className="font-medium text-purple-800">Range:</span>{' '}
+                  {toOpen5eDisplayString(fullSpell.range)}
+                </p>
+                <p className="text-gray-700">
+                  <span className="font-medium text-purple-800">Components:</span>{' '}
+                  {toOpen5eDisplayString(fullSpell.components)}
+                </p>
+                <p className="text-gray-700">
+                  <span className="font-medium text-purple-800">Duration:</span>{' '}
+                  {toOpen5eDisplayString(fullSpell.duration)}
+                </p>
+              </div>
+              <p className="text-gray-700 whitespace-pre-wrap leading-relaxed border-t border-purple-100 pt-2 mt-2">
+                {fullSpell.desc}
+              </p>
+              {fullSpell.higher_levels && (
+                <p className="text-gray-700 whitespace-pre-wrap leading-relaxed mt-2">
+                  <span className="font-bold text-purple-800">At Higher Levels:</span>{' '}
+                  {fullSpell.higher_levels}
+                </p>
+              )}
+            </>
+          )}
         </div>
       )}
     </div>
@@ -270,34 +318,162 @@ function SpellLevelSection({
 /**
  * Add Spell Interface
  */
-function AddSpellInterface({ onCancel }: { onCancel: () => void }) {
+function AddSpellInterface({
+  onCancel,
+  documentKeys,
+  onAddSpell,
+}: {
+  onCancel: () => void;
+  documentKeys: string[];
+  onAddSpell?: (spell: Open5eSpell) => void;
+}) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [visibleCount, setVisibleCount] = useState(50);
+  const [levelFilter, setLevelFilter] = useState<string>('all');
+
+  // Fetch all spells once, cache locally
+  const { data: allSpells = [], isLoading, isError, refetch } = useSpells(documentKeys);
+
+  const filteredSpells = useMemo(() => {
+    let result = allSpells;
+
+    if (levelFilter !== 'all') {
+      const levelNum = parseInt(levelFilter, 10);
+      result = result.filter((s) => s.level === levelNum);
+    }
+
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(
+        (s) =>
+          s.name.toLowerCase().includes(term) ||
+          toOpen5eDisplayString(s.school).toLowerCase().includes(term)
+      );
+    }
+
+    return result;
+  }, [allSpells, searchTerm, levelFilter]);
+
+  const visibleSpells = useMemo(
+    () => filteredSpells.slice(0, visibleCount),
+    [filteredSpells, visibleCount]
+  );
+
+  // Infinite scroll observer
+  const observerTarget = useRef<HTMLDivElement>(null);
+
+  const handleObserver = useCallback(
+    (entries: IntersectionObserverEntry[]) => {
+      const [target] = entries;
+      if (target.isIntersecting) {
+        setVisibleCount((prev) => Math.min(prev + 50, filteredSpells.length));
+      }
+    },
+    [filteredSpells.length]
+  );
+
+  useEffect(() => {
+    const element = observerTarget.current;
+    if (!element) return;
+    const observer = new IntersectionObserver(handleObserver, {
+      root: null,
+      rootMargin: '100px',
+      threshold: 0.1,
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [handleObserver]);
 
   return (
-    <div className="border-2 border-purple-300 rounded-lg p-4 bg-purple-50">
-      <div className="flex items-center justify-between mb-3">
-        <h4 className="font-bold text-purple-900 uppercase text-sm">Add Spell</h4>
+    <div className="border-2 border-purple-300 rounded-lg p-4 bg-purple-50 flex flex-col h-[500px]">
+      <div className="flex items-center justify-between mb-3 shrink-0">
+        <h4 className="font-bold text-purple-900 uppercase text-sm">Add Spell from SRD</h4>
         <Button variant="ghost" size="sm" onClick={onCancel} className="h-7 px-2">
           <X className="w-4 h-4" />
         </Button>
       </div>
 
-      <div className="relative mb-3">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-        <Input
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Search for spells..."
-          className="pl-9 border-purple-300"
-        />
+      <div className="flex gap-2 mb-3 shrink-0">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <Input
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setVisibleCount(50);
+            }}
+            placeholder="Search spells..."
+            className="pl-9 border-purple-300 bg-white"
+          />
+        </div>
+        <select
+          value={levelFilter}
+          onChange={(e) => {
+            setLevelFilter(e.target.value);
+            setVisibleCount(50);
+          }}
+          className="px-3 border border-purple-300 rounded-md text-sm bg-white text-gray-700 w-32 focus:outline-none focus:ring-2 focus:ring-purple-500"
+        >
+          <option value="all">All Levels</option>
+          <option value="0">Cantrips</option>
+          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((l) => (
+            <option key={l} value={l}>
+              Level {l}
+            </option>
+          ))}
+        </select>
       </div>
 
-      <div className="text-center py-6 text-gray-500 text-sm">
-        <p>Spell search and selection interface will be implemented here.</p>
-        <p className="text-xs mt-1">
-          This will fetch spells from Open5E API and allow filtering by level, school, and class.
-        </p>
-      </div>
+      {isError && (
+        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-800 mb-3 shrink-0">
+          Failed to load spells.
+          <Button variant="outline" size="sm" className="mt-2 ml-2" onClick={() => refetch()}>
+            Retry
+          </Button>
+        </div>
+      )}
+
+      <Command className="flex-1 border border-purple-200 rounded-lg overflow-hidden bg-white">
+        <CommandList className="max-h-full">
+          <CommandEmpty>{isLoading ? 'Loading spells...' : 'No spells found.'}</CommandEmpty>
+          <CommandGroup>
+            {visibleSpells.map((spell) => (
+              <CommandItem
+                key={spell.key}
+                value={spell.key}
+                className="py-2 px-3 border-b border-gray-50 last:border-0 hover:bg-purple-50"
+              >
+                <div className="flex items-center justify-between w-full">
+                  <div>
+                    <div className="font-medium text-purple-900">{spell.name}</div>
+                    <div className="text-xs text-gray-500">
+                      {spell.level === 0 ? 'Cantrip' : `Level ${spell.level}`} •{' '}
+                      {toOpen5eDisplayString(spell.school)} •{' '}
+                      {toOpen5eDisplayString(spell.casting_time)}
+                    </div>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    className="h-7 text-xs bg-purple-100 text-purple-700 hover:bg-purple-200"
+                    onClick={() => {
+                      onAddSpell?.(spell);
+                      onCancel();
+                    }}
+                  >
+                    Add
+                  </Button>
+                </div>
+              </CommandItem>
+            ))}
+            {visibleCount < filteredSpells.length && (
+              <div ref={observerTarget} className="h-10 flex items-center justify-center">
+                <span className="text-xs text-gray-400">Loading more...</span>
+              </div>
+            )}
+          </CommandGroup>
+        </CommandList>
+      </Command>
     </div>
   );
 }
@@ -308,8 +484,10 @@ function AddSpellInterface({ onCancel }: { onCancel: () => void }) {
 export function SpellcastingSection({
   spellcasting,
   primaryClassKey,
+  documentKeys,
   onSpellSlotUse,
   onSpellTogglePrepared,
+  onAddSpell,
   onRemoveSpell,
 }: SpellcastingSectionProps) {
   const [showAddSpell, setShowAddSpell] = useState(false);
@@ -441,7 +619,11 @@ export function SpellcastingSection({
 
       {/* Add Spell */}
       {showAddSpell ? (
-        <AddSpellInterface onCancel={() => setShowAddSpell(false)} />
+        <AddSpellInterface
+          onCancel={() => setShowAddSpell(false)}
+          documentKeys={documentKeys}
+          onAddSpell={onAddSpell}
+        />
       ) : (
         <Button
           variant="outline"

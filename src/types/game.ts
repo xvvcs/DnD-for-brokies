@@ -214,6 +214,7 @@ export interface CharacterFeature {
   name: string;
   description: string;
   source: string; // e.g., "Class: Fighter", "Race: Elf", "Feat: Sharpshooter"
+  sourceKey?: string; // Reference to the source item/feature in the API
   level?: number;
   uses?: {
     max: number;

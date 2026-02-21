@@ -62,6 +62,15 @@ export interface Open5eClassFeature {
   level: number;
 }
 
+// Feat
+export interface Open5eFeat extends Open5eEntity {
+  desc: string;
+  prerequisite?: string;
+  has_prerequisite?: boolean;
+  benefits?: Array<{ desc: string }>;
+  type?: string;
+}
+
 // Background
 export interface Open5eBackground extends Open5eEntity {
   description: string;

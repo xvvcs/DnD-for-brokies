@@ -29,6 +29,7 @@ import { useCharacter } from '@/hooks/useCharacter';
 import { useAutoSave, SaveIndicator } from '@/hooks/useAutoSave';
 import { useCharacterStore } from '@/stores/characterStore';
 import { deleteCharacter } from '@/lib/db/characters';
+import { toOpen5eDisplayString } from '@/lib/utils';
 import type { Character, CharacterUpdate } from '@/types/character';
 import type { ProficiencyLevel, SpellLevel } from '@/types/game';
 
@@ -227,6 +228,7 @@ function DebugCharacterSheet({ characterId }: CharacterSheetClientProps) {
             onUseAction={(id) => console.log('Use action:', id)}
             spellcasting={character.spellcasting}
             primaryClassKey={character.classes[0]?.key || ''}
+            documentKeys={['wotc-srd', 'srd-2024']}
             onSpellSlotUse={(level: SpellLevel, isUsed: boolean) =>
               console.log('Spell slot used:', level, isUsed)
             }
@@ -240,6 +242,7 @@ function DebugCharacterSheet({ characterId }: CharacterSheetClientProps) {
           {/* Features Panel */}
           <FeaturesPanel
             features={character.features}
+            documentKeys={['wotc-srd', 'srd-2024']}
             onFeatureUse={(featureId) => {
               // Decrement uses
               const updatedFeatures = character.features.map((f) =>
@@ -590,6 +593,7 @@ function LiveCharacterSheet({ characterId }: CharacterSheetClientProps) {
             }}
             spellcasting={character.spellcasting}
             primaryClassKey={character.classes[0]?.key || ''}
+            documentKeys={['wotc-srd', 'srd-2024']}
             onSpellSlotUse={(level, isUsed) => {
               if (!character.spellcasting) return;
               handleUpdate({
@@ -634,7 +638,7 @@ function LiveCharacterSheet({ characterId }: CharacterSheetClientProps) {
                       spellKey: spell.key,
                       name: spell.name,
                       level,
-                      school: spell.school,
+                      school: toOpen5eDisplayString(spell.school),
                       prepared: false,
                     },
                   ],
@@ -655,6 +659,7 @@ function LiveCharacterSheet({ characterId }: CharacterSheetClientProps) {
           />
           <FeaturesPanel
             features={character.features}
+            documentKeys={['wotc-srd', 'srd-2024']}
             onFeatureUse={(featureId) => {
               handleUpdate({
                 features: character.features.map((f) =>
