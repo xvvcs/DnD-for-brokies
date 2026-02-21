@@ -1,11 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, Menu, X } from 'lucide-react';
+import { Shield, Menu, X, LogOut } from 'lucide-react';
+import { useAuth0 } from '@auth0/auth0-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
 export function Navbar() {
+  const { isAuthenticated, logout } = useAuth0();
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
@@ -52,6 +54,17 @@ export function Navbar() {
             <Button asChild className="font-[family-name:var(--font-cinzel)]">
               <Link href="/characters/new">Create Character</Link>
             </Button>
+            {isAuthenticated && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                className="text-muted-foreground hover:text-foreground"
+                aria-label="Log out"
+              >
+                <LogOut className="w-4 h-4" />
+              </Button>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -90,6 +103,18 @@ export function Navbar() {
             >
               <Link href="/characters/new">Create Character</Link>
             </Button>
+            {isAuthenticated && (
+              <Button
+                variant="ghost"
+                className="w-full font-[family-name:var(--font-cinzel)] text-muted-foreground"
+                onClick={() => {
+                  setIsOpen(false);
+                  logout({ logoutParams: { returnTo: window.location.origin } });
+                }}
+              >
+                Log out
+              </Button>
+            )}
           </div>
         </div>
       )}
