@@ -9,11 +9,22 @@
 import { db } from './database';
 import type { ApiCacheEntry } from './schema';
 import { CACHE_TTL } from './schema';
-import crypto from 'crypto';
 
 // ============================================================================
-// Cache Key Generation
+// Cache Key Generation (browser-compatible, no Node.js crypto)
 // ============================================================================
+
+/**
+ * Simple deterministic hash for cache keys.
+ * Uses djb2-style algorithm — sufficient for cache key uniqueness.
+ */
+function hashString(str: string): string {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = (hash * 33) ^ str.charCodeAt(i);
+  }
+  return (hash >>> 0).toString(16).substring(0, 8);
+}
 
 /**
  * Generate a cache key from endpoint and parameters
@@ -35,7 +46,7 @@ export function generateCacheKey(endpoint: string, params: Record<string, unknow
     );
 
   const paramsString = JSON.stringify(sortedParams);
-  const hash = crypto.createHash('md5').update(paramsString).digest('hex').substring(0, 8);
+  const hash = hashString(paramsString);
 
   return `${endpoint}:${hash}`;
 }

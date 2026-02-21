@@ -160,6 +160,8 @@ export const SETTINGS_KEYS = {
   lastCharacterId: 'lastCharacterId',
   /** Cache statistics */
   cacheStats: 'cacheStats',
+  /** Auth0 sub of the first/owner account (single-account lock) */
+  authOwnerSub: 'authOwnerSub',
 } as const;
 
 /**
