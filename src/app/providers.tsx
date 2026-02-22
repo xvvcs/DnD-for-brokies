@@ -3,6 +3,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState } from 'react';
 import { TooltipProvider } from '@/components/ui/tooltip';
+import { Auth0ProviderClient } from '@/components/auth/Auth0ProviderClient';
+import { ProtectedShell } from '@/components/auth/ProtectedShell';
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
@@ -20,7 +22,11 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+      <TooltipProvider delayDuration={200}>
+        <Auth0ProviderClient>
+          <ProtectedShell>{children}</ProtectedShell>
+        </Auth0ProviderClient>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
