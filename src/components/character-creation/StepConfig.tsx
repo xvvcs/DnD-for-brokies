@@ -13,6 +13,7 @@ import { useDocuments, useClasses, useSpecies, useBackgrounds } from '@/hooks/ap
 import { useCampaigns } from '@/hooks/useCampaigns';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -71,9 +72,15 @@ export function StepConfig({
   const { data: documents, isLoading: documentsLoading } = useDocuments();
   const { data: campaigns } = useCampaigns();
 
-  useClasses(documentKeys);
-  useSpecies(documentKeys);
-  useBackgrounds(documentKeys);
+  const classesQuery = useClasses(documentKeys);
+  const speciesQuery = useSpecies(documentKeys);
+  const backgroundsQuery = useBackgrounds(documentKeys);
+
+  const cacheQueries = [classesQuery, speciesQuery, backgroundsQuery];
+  const cacheLabels = ['Classes', 'Species', 'Backgrounds'];
+  const cacheLoading = documentKeys.length > 0 && cacheQueries.some((q) => q.isFetching);
+  const cacheLoaded = cacheQueries.filter((q) => q.isSuccess).length;
+  const cacheTotal = documentKeys.length > 0 ? cacheQueries.length : 0;
 
   useEffect(() => {
     const errors: ValidationError[] = [];
@@ -158,6 +165,29 @@ export function StepConfig({
             </div>
           ))}
         </div>
+
+        {cacheLoading && (
+          <div className="mt-4 rounded-lg border border-border bg-muted/30 p-4">
+            <p className="text-sm font-medium text-foreground mb-2">
+              Loading reference data… {cacheLoaded}/{cacheTotal} complete
+            </p>
+            <Progress value={(cacheLoaded / cacheTotal) * 100} className="h-2" />
+            <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+              {cacheLabels.map((label, i) => (
+                <li key={label} className="flex items-center gap-1.5">
+                  {cacheQueries[i].isSuccess ? (
+                    <span className="text-primary">✓</span>
+                  ) : cacheQueries[i].isFetching ? (
+                    <span className="animate-pulse">…</span>
+                  ) : (
+                    <span>○</span>
+                  )}
+                  {label}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       <div>

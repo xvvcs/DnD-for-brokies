@@ -623,7 +623,7 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 
 #### 4.1 Wizard Framework
 
-- [ ] **4.1.1** Create wizard state management (`src/stores/characterCreationStore.ts`)
+- [x] **4.1.1** Create wizard state management (`src/stores/characterCreationStore.ts`)
   - Track current step
   - Store selections for each step
   - Validation state per step
@@ -631,13 +631,13 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
   - Persist progress in session storage
   - Estimated: 3 hours
 
-- [ ] **4.1.2** Create wizard layout component
+- [x] **4.1.2** Create wizard layout component
   - Step indicator/progress bar
   - Navigation buttons (Back, Next, Save & Exit)
   - Mobile-responsive stepper
   - Estimated: 2 hours
 
-- [ ] **4.1.3** Create StepWrapper component
+- [x] **4.1.3** Create StepWrapper component
   - Consistent padding and styling
   - Validation error display
   - Help/tooltip integration
@@ -645,15 +645,15 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 
 #### 4.2 Step 0: Configuration (`src/components/character-creation/StepConfig.tsx`)
 
-- [ ] **4.2.1** Document/rulebook selector
+- [x] **4.2.1** Document/rulebook selector
   - Multi-select from available documents
   - Group by game system (5e 2014, 5e 2024, A5E)
   - Show document descriptions
-- [ ] **4.2.2** Edition selection (2014 vs 2024)
-- [ ] **4.2.3** Campaign assignment dropdown
-- [ ] **4.2.4** HP method selection (fixed vs manual)
-- [ ] **4.2.5** Trigger API cache warming for selected documents
-- [ ] **4.2.6** Cache loading progress indicator
+- [x] **4.2.2** Edition selection (2014 vs 2024)
+- [x] **4.2.3** Campaign assignment dropdown
+- [x] **4.2.4** HP method selection (fixed vs manual)
+- [x] **4.2.5** Trigger API cache warming for selected documents
+- [x] **4.2.6** Cache loading progress indicator
 - Estimated: 4 hours
 
 #### 4.3 Step 1: Choose Class (`src/components/character-creation/StepClass.tsx`)
@@ -759,10 +759,10 @@ Implement the 8-step character creation wizard following D&D Beyond's flow.
 
 #### 4.11 Wizard Integration
 
-- [ ] **4.11.1** Create wizard page (`src/app/characters/new/page.tsx`)
-- [ ] **4.11.2** Integrate all steps with state management
-- [ ] **4.11.3** Step validation before navigation
-- [ ] **4.11.4** Progress persistence (session storage)
+- [x] **4.11.1** Create wizard page (`src/app/characters/new/page.tsx`)
+- [x] **4.11.2** Integrate all steps with state management
+- [x] **4.11.3** Step validation before navigation
+- [x] **4.11.4** Progress persistence (session storage)
 - [ ] **4.11.5** Cancel/exit confirmation
 - Estimated: 2 hours
 
