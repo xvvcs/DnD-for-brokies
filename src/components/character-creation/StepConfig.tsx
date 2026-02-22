@@ -7,7 +7,7 @@
 
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, type KeyboardEvent } from 'react';
 
 import { useDocuments, useClasses, useSpecies, useBackgrounds } from '@/hooks/api/useOpen5e';
 import { useCampaigns } from '@/hooks/useCampaigns';
@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 
 import type { Edition } from '@/types/game';
+import type { Open5eDocument } from '@/types/open5e';
 import type { ValidationError } from '@/stores/characterCreationStore';
 
 import { cn } from '@/lib/utils';
@@ -34,10 +35,8 @@ function inferGameSystem(key: string): string {
   return 'Other';
 }
 
-function groupDocumentsBySystem(
-  documents: { key: string; name: string }[]
-): Map<string, { key: string; name: string }[]> {
-  const groups = new Map<string, { key: string; name: string }[]>();
+function groupDocumentsBySystem(documents: Open5eDocument[]): Map<string, Open5eDocument[]> {
+  const groups = new Map<string, Open5eDocument[]>();
   for (const doc of documents) {
     const system = inferGameSystem(doc.key);
     const list = groups.get(system) ?? [];
@@ -46,6 +45,126 @@ function groupDocumentsBySystem(
   }
   return groups;
 }
+
+function compactDescription(desc?: string): string | null {
+  const text = desc?.trim();
+  if (!text) return null;
+  if (text.length <= 140) return text;
+  return `${text.slice(0, 137).trimEnd()}...`;
+}
+
+interface DocumentPickMeta {
+  label: 'Core Rule' | 'Popular Pick';
+  tone: 'core' | 'popular';
+}
+
+function getDocumentPickMeta(doc: Open5eDocument, edition: Edition): DocumentPickMeta | null {
+  const normalized = `${doc.key} ${doc.name}`.toLowerCase();
+  const isSrd2014 = normalized.includes('wotc-srd') || normalized.includes('srd 5.1');
+  const isSrd2024 = normalized.includes('srd-2024') || normalized.includes('srd 5.2');
+  const isA5e = normalized.includes('a5e') || normalized.includes('advanced 5th edition');
+
+  if ((edition === '2014' && isSrd2014) || (edition === '2024' && isSrd2024)) {
+    return { label: 'Core Rule', tone: 'core' };
+  }
+
+  if (isSrd2014 || isSrd2024 || isA5e) {
+    return { label: 'Popular Pick', tone: 'popular' };
+  }
+
+  return null;
+}
+
+interface ToggleOption<T extends string> {
+  value: T;
+  label: string;
+}
+
+interface SegmentedToggleProps<T extends string> {
+  value: T;
+  options: readonly ToggleOption<T>[];
+  onChange: (value: T) => void;
+  ariaLabel: string;
+}
+
+function SegmentedToggle<T extends string>({
+  value,
+  options,
+  onChange,
+  ariaLabel,
+}: SegmentedToggleProps<T>) {
+  const activeIndex = Math.max(
+    0,
+    options.findIndex((option) => option.value === value)
+  );
+  const optionWidth = 100 / options.length;
+
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(event.key)) {
+      return;
+    }
+
+    event.preventDefault();
+    const direction = event.key === 'ArrowRight' || event.key === 'ArrowDown' ? 1 : -1;
+    const nextIndex = (activeIndex + direction + options.length) % options.length;
+    const next = options[nextIndex];
+    if (next) {
+      onChange(next.value);
+    }
+  };
+
+  return (
+    <div
+      role="radiogroup"
+      aria-label={ariaLabel}
+      onKeyDown={handleKeyDown}
+      className="relative rounded-xl border border-border bg-muted/70 p-1"
+    >
+      <span
+        aria-hidden="true"
+        className="pointer-events-none absolute top-1 bottom-1 rounded-lg bg-primary shadow-sm transition-all duration-300 ease-out"
+        style={{
+          width: `calc(${optionWidth}% - 0.25rem)`,
+          left: `calc(${activeIndex * optionWidth}% + 0.125rem)`,
+        }}
+      />
+      <div
+        className="relative z-10 grid"
+        style={{ gridTemplateColumns: `repeat(${options.length}, minmax(0, 1fr))` }}
+      >
+        {options.map((option) => {
+          const isActive = option.value === value;
+
+          return (
+            <button
+              key={option.value}
+              type="button"
+              role="radio"
+              aria-checked={isActive}
+              onClick={() => onChange(option.value)}
+              className={cn(
+                'h-10 rounded-lg px-3 text-sm font-medium transition-colors duration-300',
+                isActive ? 'text-primary-foreground' : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+const EDITION_OPTIONS = [
+  { value: '2014', label: '5e 2014' },
+  { value: '2024', label: '5e 2024' },
+] as const;
+
+const HP_METHOD_OPTIONS = [
+  { value: 'fixed', label: 'Fixed (average)' },
+  { value: 'manual', label: 'Manual (roll)' },
+] as const;
 
 export interface StepConfigProps {
   documentKeys: string[];
@@ -137,30 +256,76 @@ export function StepConfig({
         <p className="text-sm text-muted-foreground mb-4">
           Select which rulebooks to use for classes, species, spells, and equipment.
         </p>
+        <p className="mb-4 text-xs text-muted-foreground">
+          Outlined cards are common starter picks; the core rule follows your selected edition.
+        </p>
         <div className="space-y-6">
           {Array.from(groups.entries()).map(([system, docs]) => (
             <div key={system}>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
                 {system}
               </p>
-              <div className="flex flex-wrap gap-4">
-                {docs.map((doc) => (
-                  <label
-                    key={doc.key}
-                    className={cn(
-                      'flex items-center gap-2 cursor-pointer rounded-lg border-2 px-4 py-3 transition-colors',
-                      documentKeys.includes(doc.key)
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary/50'
-                    )}
-                  >
-                    <Checkbox
-                      checked={documentKeys.includes(doc.key)}
-                      onCheckedChange={(checked) => handleDocumentToggle(doc.key, checked === true)}
-                    />
-                    <span className="text-sm font-medium">{doc.name}</span>
-                  </label>
-                ))}
+              <div className="grid gap-3 sm:grid-cols-2">
+                {docs.map((doc) => {
+                  const shortDesc = compactDescription(doc.desc);
+                  const isSelected = documentKeys.includes(doc.key);
+                  const pickMeta = getDocumentPickMeta(doc, edition);
+
+                  return (
+                    <label
+                      key={doc.key}
+                      className={cn(
+                        'group cursor-pointer rounded-xl border p-3 transition-all',
+                        'bg-card/60 hover:bg-card',
+                        pickMeta &&
+                          (pickMeta.tone === 'core'
+                            ? 'ring-2 ring-primary/50'
+                            : 'ring-1 ring-accent/60'),
+                        isSelected
+                          ? 'border-primary bg-primary/5 shadow-sm'
+                          : 'border-border hover:border-primary/40'
+                      )}
+                      title={doc.desc ?? undefined}
+                    >
+                      <div className="flex items-start gap-2 w-full">
+                        <Checkbox
+                          checked={isSelected}
+                          onCheckedChange={(checked) =>
+                            handleDocumentToggle(doc.key, checked === true)
+                          }
+                          className="mt-0.5"
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="truncate text-sm font-medium text-foreground">
+                              {doc.name}
+                            </p>
+                            {pickMeta && (
+                              <span
+                                className={cn(
+                                  'shrink-0 rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+                                  pickMeta.tone === 'core'
+                                    ? 'border-primary/70 bg-primary text-primary-foreground shadow-sm'
+                                    : 'border-accent/70 bg-accent text-accent-foreground shadow-sm'
+                                )}
+                              >
+                                {pickMeta.label}
+                              </span>
+                            )}
+                          </div>
+                          {shortDesc && (
+                            <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                              {shortDesc}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      <p className="mt-2 pl-6 text-[11px] uppercase tracking-wide text-muted-foreground/80">
+                        {system}
+                      </p>
+                    </label>
+                  );
+                })}
               </div>
             </div>
           ))}
@@ -191,36 +356,16 @@ export function StepConfig({
       </div>
 
       <div>
-        <Label htmlFor="edition" className="font-semibold text-foreground">
-          Edition
-        </Label>
+        <Label className="font-semibold text-foreground">Edition</Label>
         <p className="text-sm text-muted-foreground mb-2">
           Choose 2014 (SRD 5.1) or 2024 (SRD 5.2) rules.
         </p>
-        <div className="flex gap-6">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="edition"
-              value="2014"
-              checked={edition === '2014'}
-              onChange={() => handleEditionChange('2014')}
-              className="w-4 h-4"
-            />
-            <span>5e 2014</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="edition"
-              value="2024"
-              checked={edition === '2024'}
-              onChange={() => handleEditionChange('2024')}
-              className="w-4 h-4"
-            />
-            <span>5e 2024</span>
-          </label>
-        </div>
+        <SegmentedToggle
+          value={edition}
+          options={EDITION_OPTIONS}
+          onChange={handleEditionChange}
+          ariaLabel="Edition selection"
+        />
       </div>
 
       <div>
@@ -248,30 +393,12 @@ export function StepConfig({
         <p className="text-sm text-muted-foreground mb-2">
           Fixed: use average hit die roll. Manual: roll for each level.
         </p>
-        <div className="flex gap-6">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="hpMethod"
-              value="fixed"
-              checked={hpMethod === 'fixed'}
-              onChange={() => handleHpMethodChange('fixed')}
-              className="w-4 h-4"
-            />
-            <span>Fixed (average)</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer">
-            <input
-              type="radio"
-              name="hpMethod"
-              value="manual"
-              checked={hpMethod === 'manual'}
-              onChange={() => handleHpMethodChange('manual')}
-              className="w-4 h-4"
-            />
-            <span>Manual (roll)</span>
-          </label>
-        </div>
+        <SegmentedToggle
+          value={hpMethod}
+          options={HP_METHOD_OPTIONS}
+          onChange={handleHpMethodChange}
+          ariaLabel="HP method selection"
+        />
       </div>
     </div>
   );

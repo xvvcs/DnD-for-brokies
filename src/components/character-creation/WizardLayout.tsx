@@ -85,9 +85,10 @@ export function WizardLayout({
                     </span>
                     <span
                       className={cn(
-                        'ml-2 text-xs sm:text-sm truncate max-w-[80px] sm:max-w-none transition-colors',
-                        isActive ? 'font-semibold text-foreground' : 'text-muted-foreground',
-                        isCompleted && !isActive && 'group-hover:text-foreground'
+                        'ml-2 max-w-[80px] truncate rounded px-1.5 py-0.5 text-xs transition-colors sm:max-w-none sm:text-sm',
+                        isActive ? 'font-semibold text-primary' : 'text-muted-foreground',
+                        !isActive &&
+                          'group-hover:bg-secondary group-hover:text-secondary-foreground'
                       )}
                     >
                       {name}
@@ -102,7 +103,7 @@ export function WizardLayout({
           <p className="text-sm text-muted-foreground">
             Step {currentStep + 1} of {WIZARD_STEP_COUNT}
           </p>
-          <p className="font-[family-name:var(--font-cinzel)] font-semibold text-foreground">
+          <p className="font-[family-name:var(--font-cinzel)] font-semibold text-primary">
             {WIZARD_STEP_NAMES[currentStep]}
           </p>
         </div>
@@ -125,16 +126,16 @@ export function WizardLayout({
             variant="outline"
             onClick={onPrev}
             disabled={currentStep === 0}
-            className="min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0"
+            className="min-h-[44px] min-w-[44px] border-border bg-card text-foreground shadow-xs hover:bg-muted md:min-h-0 md:min-w-0"
           >
             <ChevronLeft className="w-4 h-4 mr-1" />
             Back
           </Button>
           <Button
             type="button"
-            variant="ghost"
+            variant="secondary"
             onClick={onSaveExit}
-            className="min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0"
+            className="min-h-[44px] min-w-[44px] border border-border/80 bg-secondary text-secondary-foreground shadow-xs hover:bg-secondary/85 md:min-h-0 md:min-w-0"
           >
             <Save className="w-4 h-4 mr-1" />
             Save & Exit
