@@ -18,3 +18,6 @@ export * from './api';
 
 // Auto-save hooks
 export * from './useAutoSave';
+
+// Navigation guards
+export * from './useUnsavedChangesGuard';

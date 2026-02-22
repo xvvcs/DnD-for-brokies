@@ -4,6 +4,7 @@
  */
 
 import type { AbilityScore, Alignment, Edition, SpellLevel, CharacterAction } from './game';
+import type { GenerationMethod } from '@/lib/engine/ability-scores';
 import type {
   ActiveCondition,
   Appearance,
@@ -182,6 +183,46 @@ export interface CharacterSummary {
 export interface CharacterCreationState {
   step: number;
   data: Partial<Character>;
+}
+
+/** Wizard step selections for character creation flow */
+export interface WizardSelections {
+  config?: {
+    documentKeys: string[];
+    edition: Edition;
+    campaignId?: string;
+    hpMethod: 'fixed' | 'manual';
+  };
+  class?: {
+    classKey: string;
+    level: number;
+    archetypeKey?: string;
+  };
+  background?: {
+    backgroundKey: string;
+    originFeatKey?: string;
+  };
+  species?: {
+    speciesKey: string;
+    subraceKey?: string;
+  };
+  abilityScores?: {
+    method: GenerationMethod;
+    scores: Record<AbilityScore, number>;
+  };
+  equipment?: {
+    items: { itemKey: string; quantity: number; equipped?: boolean }[];
+    currency?: Partial<Currency>;
+  };
+  spells?: {
+    cantrips: string[];
+    knownPrepared: { spellKey: string; level: SpellLevel }[];
+  };
+  description?: {
+    name: string;
+    personality?: Partial<Personality>;
+    appearance?: Partial<Appearance>;
+  };
 }
 
 // Character Update Operations

@@ -6,4 +6,5 @@
  */
 
 export * from './characterStore';
+export * from './characterCreationStore';
 export * from './uiStore';
